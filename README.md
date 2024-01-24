@@ -27,19 +27,11 @@ git checkout develop
 Ubuntu: https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce-1
 
 ## Install Postgres
-If installing a newer version of postgres, replace "13" with the appropriate version.
+Postgres is required to run the test suite. The simplest way to set this up is to run an official Postgres docker container. Replace <version> with your desired version of postgres:
 ```
-sudo apt-get install postgresql-13 postgresql-client-13 postgresql-contrib-13 postgresql-server-dev-13
+docker run -itd postgres:<version>
 ```
-Set a password for the 'postgres' user.
-```
-sudo -u postgres psql -c "alter user postgres with password 'postgres'"
-```
-If you choose a different password, you'll need to set the AG_DB_PASSWORD
-environment variable with your chosen password:
-```
-export AG_DB_PASSWORD=<password>
-```
+# FIXME: get the correct command from other machine^^^
 
 ## Install Redis Server
 ```
@@ -62,6 +54,8 @@ pip-sync requirements.txt requirements-dev.txt
 
 You can then run `pipenv shell` to start a shell in the virtual environment,
 or if you prefer you can prefix the python commands below with `pipenv run`.
+
+If you run into errors installing psycopg2, please refer to https://www.psycopg.org/docs/install.html#build-prerequisites for troubleshooting tips.
 
 ### Updating Packages
 This section contains some useful reference commands for pip-tools.
@@ -109,7 +103,7 @@ endpoint details.
 
 To update schema.yml, run:
 ```
-./manage.py generateschema --generator_class autograder.rest_api.schema.AGSchemaGenerator > schema/schema.yml
+./manage.py generateschema --generator_class autograder.rest_api.schema.AGSchemaGenerator > autograder/rest_api/schema/schema.yml
 ```
 
 If you are running the full development stack, you may skip the next step.

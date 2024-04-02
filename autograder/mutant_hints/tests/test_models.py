@@ -1,16 +1,14 @@
 import copy
-import os
+import datetime
 
 from django.core.exceptions import ValidationError
 
-import autograder.core.utils as core_ut
 import autograder.core.models as ag_models
-from autograder.mutant_hints.models import MutantNameObfuscationChoices, MutationTestSuiteHintConfig, UnlockedHint
 import autograder.utils.testing.model_obj_builders as obj_build
-from autograder.core.models import Course, LateDaysRemaining, Semester
-from autograder.core.models.course import clear_cached_user_roles
+from autograder.mutant_hints.models import (
+    MutantNameObfuscationChoices, MutationTestSuiteHintConfig, UnlockedHint
+)
 from autograder.utils.testing import UnitTestBase
-import datetime
 
 
 class MutationTestSuiteHintConfigTestCase(UnitTestBase):
@@ -153,7 +151,6 @@ class UnlockedHintTestCase(UnitTestBase):
         self.result = ag_models.MutationTestSuiteResult.objects.validate_and_create(
             mutation_test_suite=self.mutation_test_suite, submission=self.submission
         )
-
 
     def test_valid_create_with_defaults(self) -> None:
         hint = UnlockedHint.objects.validate_and_create(

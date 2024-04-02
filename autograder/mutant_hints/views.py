@@ -155,7 +155,7 @@ def _obfuscate_mutant_name(
     mutation_test_suite: ag_models.MutationTestSuite,
     hint_config: MutationTestSuiteHintConfig,
 ):
-    match (hint_config.obfuscate_mutant_names):
+    match(hint_config.obfuscate_mutant_names):
         case MutantNameObfuscationChoices.none:
             return mutant_name
         case MutantNameObfuscationChoices.sequential:
@@ -317,7 +317,8 @@ class UnlockedMutantHintsView(NestedModelView):
         ):
             raise ValidationError(
                 {
-                    '__all__': f'{num_hints_for_submission}/{hint_config.num_hints_per_submission} '
+                    '__all__':
+                        f'{num_hints_for_submission}/{hint_config.num_hints_per_submission} '
                     'hints already unlocked for this submission.'
                 }
             )

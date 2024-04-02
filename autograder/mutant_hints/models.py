@@ -44,7 +44,7 @@ class MutationTestSuiteHintConfig(ag_models.AutograderModel):
         blank=True, null=True, default=None,
         validators=[MinValueValidator(1)],
         help_text="The number of hints a student is allowed to unlock per "
-                   "submission for this mutation test suite in a 24 hour period. "
+                  "submission for this mutation test suite in a 24 hour period. "
                   "None indicates no limit.")
 
     hint_limit_reset_time = models.TimeField(

@@ -27,6 +27,8 @@ SITE_DOMAIN = os.environ.get('SITE_DOMAIN', '').strip()  # This is used for auth
 OAUTH2_SECRETS_FILENAME = os.environ.get('OAUTH2_SECRETS_FILENAME', 'dev_oauth2_secrets.json')
 OAUTH2_SECRETS_PATH = os.path.join(SETTINGS_DIR, OAUTH2_SECRETS_FILENAME)
 
+# ONLY USED FOR LEGACY MIGRATION.
+# TODO: Remove in next major release.
 PREFERRED_DOMAIN = '@umich.edu'
 
 SECRETS_DIR = os.path.join(SETTINGS_DIR, 'secrets')
@@ -92,6 +94,7 @@ INSTALLED_APPS = [
     'autograder.grading_tasks',
     'autograder.utils',
     'autograder.handgrading',
+    'autograder.mutant_hints',
 ]
 
 MIDDLEWARE = (
@@ -178,6 +181,10 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 25))
 
 EMAIL_FROM_ADDR = os.environ.get('EMAIL_FROM_ADDR', 'admin@autograder.io')
+
+# A whitespace-separated list of email addresses to send certain
+# critical error notifications to.
+ERROR_NOTIFICATION_EMAIL_ADDRS = os.environ.get('ERROR_NOTIFICATION_EMAIL_ADDRS', '').split()
 
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,

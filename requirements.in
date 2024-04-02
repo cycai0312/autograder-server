@@ -1,5 +1,4 @@
-autograder-sandbox
-backports.zoneinfo
+autograder-sandbox==6.0.0a4
 celery<5.0.0
 django-extensions
 django-redis

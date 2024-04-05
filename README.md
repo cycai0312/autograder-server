@@ -10,13 +10,11 @@ and testing the server code.
 ## System Requirements
 
 **Supported Operating Systems:**
-- Ubuntu 18.04 or later
+- Ubuntu 20.04 or later
 
 It may be possible to run the server tests on OSX.
 If you decide to try this, you're on your own.
-Newer versions of Ubuntu are probably ok, but may require extra effort to
-install Postgres 9.5 or change the configuration to use a newer version
-(the latter applies to full stack development and deployment).
+Newer versions of Ubuntu are usually ok.
 
 ## Clone and Checkout
 ```
@@ -29,6 +27,7 @@ git checkout develop
 Ubuntu: https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce-1
 
 ## Install Postgres
+If installing a newer version of postgres, replace "13" with the appropriate version.
 ```
 sudo apt-get install postgresql-13 postgresql-client-13 postgresql-contrib-13 postgresql-server-dev-13
 ```
@@ -47,14 +46,14 @@ export AG_DB_PASSWORD=<password>
 sudo apt-get install redis-server
 ```
 
-## Install Python 3.8
+## Install Python 3.10
 ```
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt-get update
-sudo apt-get install python3.8 python3.8-distutils python3.8-venv
-curl https://bootstrap.pypa.io/get-pip.py | sudo python3.8
+sudo apt-get install python3.10 python3.10-distutils python3.10-venv
+curl https://bootstrap.pypa.io/get-pip.py | sudo python3.10
 
-python3.8 -m venv venv
+python3.10 -m venv venv
 source venv/bin/activate
 
 pip install pip-tools wheel
@@ -93,7 +92,7 @@ To install a new dev package, add it to requirements-dev.in and then run
 ## Generate Secrets
 Run the following command to generate Django and GPG secrets.
 ```
-python3.8 generate_secrets.py
+python3.10 generate_secrets.py
 ```
 
 ## Running the Unit Tests

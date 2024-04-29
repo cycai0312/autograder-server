@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0098_rename_file_obj_instructorfile__remove_in_v5_file_obj'),
+        ('core', '0103_rename_file_obj_instructorfile__remove_in_v5_file_obj'),
     ]
 
     operations = [

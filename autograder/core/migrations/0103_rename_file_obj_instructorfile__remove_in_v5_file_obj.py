@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0097_downloadtask_include_pending_extensions'),
+        ('core', '0102_alter_project_submission_limit_reset_timezone'),
     ]
 
     operations = [

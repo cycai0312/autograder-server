@@ -111,6 +111,8 @@ class _ProjectCopier:
         return self._new_project
 
     def _copy_instructor_files(self) -> None:
+        assert self._new_project is not None
+
         for instructor_file in self._project_to_copy.instructor_files.all():
             with instructor_file.open('rb') as f:
                 new_file = InstructorFile.objects.validate_and_create(

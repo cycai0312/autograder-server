@@ -5,8 +5,8 @@ import shutil
 from typing import IO, Any, AnyStr, BinaryIO, Dict, Literal, TextIO, Tuple, overload
 
 from django.core import exceptions
+from django.core.files import File
 from django.db import models, transaction
-from django.db.models.fields.files import File
 
 import autograder.core.constants as const
 import autograder.core.utils as core_ut
@@ -27,7 +27,9 @@ def _validate_filename(file_obj: File) -> None:
 
 
 class InstructorFileManager(AutograderModelManager['InstructorFile']):
-    def validate_and_create(self, *, file_obj: File, project: Project) -> InstructorFile:
+    def validate_and_create(  # type: ignore [override]
+        self, *, file_obj: File, project: Project
+    ) -> InstructorFile:
         if file_obj.size > const.MAX_INSTRUCTOR_FILE_SIZE:
             raise exceptions.ValidationError(
                 {'content': 'Instructor files cannot be bigger than {} bytes'.format(

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Literal, TYPE_CHECKING, TypedDict, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, TypedDict, TypeVar, Union
+
+from typing_extensions import Required
 
 if TYPE_CHECKING:
     from rest_framework.schemas.openapi import DRFOpenAPIInfo
@@ -58,7 +60,7 @@ class OperationObject(_OperationObjectRequired, total=False):
     description: str
     operationId: str
     parameters: List[OrRef[ParameterObject]]
-    requestBody: RequestBodyObject
+    requestBody: OrRef[RequestBodyObject]
     deprecated: bool
     externalDocs: FIXME_TYPE
     callbacks: FIXME_TYPE
@@ -89,12 +91,11 @@ class SchemaObject(TypedDict, total=False):
     default: object
     maximum: Union[int, float]
 
-    # mypy doesn't support recursive types yet
-    items: SchemaObject
-    properties: Dict[str, SchemaObject]
-    anyOf: List[SchemaObject]
-    allOf: List[SchemaObject]
-    oneOf: List[SchemaObject]
+    items: OrRef[SchemaObject]
+    properties: Dict[str, OrRef[SchemaObject]]
+    anyOf: List[OrRef[SchemaObject]]
+    allOf: List[OrRef[SchemaObject]]
+    oneOf: List[OrRef[SchemaObject]]
 
 
 ReferenceObject = TypedDict('ReferenceObject', {'$ref': str})
@@ -134,11 +135,8 @@ class ExampleObject(TypedDict, total=False):
     externalValue: str
 
 
-class _RequestBodyObjectRequired(TypedDict):
-    content: Dict[ContentType, MediaTypeObject]
-
-
-class RequestBodyObject(_RequestBodyObjectRequired, total=False):
+class RequestBodyObject(TypedDict, total=False):
+    content: Required[Dict[ContentType, MediaTypeObject]]
     description: str
     required: bool
 

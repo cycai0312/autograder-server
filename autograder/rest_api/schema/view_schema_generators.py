@@ -7,8 +7,8 @@ from rest_framework.schemas.openapi import AutoSchema
 
 from autograder import utils
 from autograder.rest_api.schema.model_schema_generators import (
-    AGModelSchemaGenerator, APIClassType, api_object_type_name_is_registered,
-    as_schema_ref, assert_not_ref, get_api_object_type_name
+    AGModelSchemaGenerator, APIClassType, api_object_type_name_is_registered, as_create_schema_ref,
+    as_schema_ref, as_update_schema_ref, assert_not_ref, get_api_object_type_name, is_not_ref
 )
 from autograder.rest_api.schema.openapi_types import (
     ContentType, HTTPMethodName, MediaTypeObject, OperationObject, OrRef, ParameterObject,
@@ -110,7 +110,7 @@ class AGViewSchemaGenerator(AutoSchema):
         )
         base_result['responses']['201'] = response_schema
 
-        base_result['requestBody'] = self.make_api_class_request_body(include_required=True)
+        base_result['requestBody'] = as_create_schema_ref(self.get_api_class())
 
         return base_result
 
@@ -128,7 +128,7 @@ class AGViewSchemaGenerator(AutoSchema):
             as_schema_ref(self.get_api_class())
         )
 
-        base_result['requestBody'] = self.make_api_class_request_body(include_required=False)
+        base_result['requestBody'] = as_update_schema_ref(self.get_api_class())
 
         return base_result
 
@@ -149,23 +149,6 @@ class AGViewSchemaGenerator(AutoSchema):
             )
 
         return cast(APIClassType, self.view.model_manager.model)
-
-# FIXME: call the new as_schema_ref methods, make update/create versions of this method, or just inline?
-    def make_api_class_request_body(self, *, include_required: bool) -> RequestBodyObject:
-        body_schema = AGModelSchemaGenerator.factory(
-            self.get_api_class()).generate_request_body_schema(include_required=include_required)
-        schema: OrRef[SchemaObject] = (
-            body_schema if body_schema is not None
-            else as_schema_ref(self.get_api_class())
-        )
-        return {
-            'required': True,
-            'content': {
-                'application/json': {
-                    'schema': schema
-                }
-            }
-        }
 
 
 # TYPES UNSAFE ------------------------------------------------------------------------------------
@@ -362,14 +345,15 @@ class CustomViewSchema(AGViewSchemaGenerator):
             assert_not_ref(param)['schema'] = schema
 
         if 'request' in method_data:
-            updates = cast(RequestBodyObject, {
-                # See if type checking works with dict union in Python 3.9
-                'required': True, **method_data['request']
-            })
             if 'requestBody' in result:
-                result['requestBody'].update(updates)
+                assert is_not_ref(result['requestBody'])
+                result['requestBody'] |= method_data['request']
             else:
-                result['requestBody'] = updates
+                result['requestBody'] = method_data['request']
+
+            if 'required' not in method_data and is_not_ref(result['requestBody']):
+                assert is_not_ref(result['requestBody'])
+                result['requestBody']['required'] = True
 
         responses: Dict[str, OrRef[ResponseObject]] = {}
         for status, response_data in method_data.get('responses', {}).items():

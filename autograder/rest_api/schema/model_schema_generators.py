@@ -5,7 +5,7 @@ from decimal import Decimal
 from enum import Enum
 from functools import singledispatch
 from typing import (
-    Any, Dict, List, Mapping, Optional, Sequence, Type, TypeVar, Union, cast, get_args, get_origin,
+    Any, Dict, List, Mapping, Optional, Sequence, Type, TypeGuard, TypeVar, Union, cast, get_args, get_origin,
     get_type_hints
 )
 
@@ -44,8 +44,10 @@ def generate_model_schemas() -> Dict[str, OrRef[SchemaObject]]:
         if class_ in _API_CREATE_OBJ_TYPE_NAMES:
             create_name = _API_CREATE_OBJ_TYPE_NAMES[class_]
             if class_ in _CREATE_BODY_OVERRIDES:
-                if _CREATE_BODY_OVERRIDES[class_] is not None:
-                    result[create_name] = _CREATE_BODY_OVERRIDES[class_]
+                # Do NOT combine these 2 if statements with and.
+                # This check allows setting an override to None to exclude it.
+                if (create_body := _CREATE_BODY_OVERRIDES[class_]) is not None:
+                    result[create_name] = create_body
             else:
                 result[create_name] = (
                     generator.generate_create_model_schema()
@@ -54,11 +56,13 @@ def generate_model_schemas() -> Dict[str, OrRef[SchemaObject]]:
         if class_ in _API_UPDATE_OBJ_TYPE_NAMES:
             update_name = _API_UPDATE_OBJ_TYPE_NAMES[class_]
             if class_ in _UPDATE_BODY_OVERRIDES:
-                if _UPDATE_BODY_OVERRIDES[class_] is not None:
-                    result[update_name] = _UPDATE_BODY_OVERRIDES[class_]
+                # Do NOT combine these 2 if statements with and.
+                # This check allows setting an override to None to exclude it.
+                if (update_body := _UPDATE_BODY_OVERRIDES[class_]) is not None:
+                    result[update_name] = update_body
             else:
                 result[update_name] = (
-                    generator.generate_request_body_schema(include_required=False)
+                    generator.generate_update_model_schema()
                 )
 
     result['UserRoles'] = {
@@ -266,7 +270,7 @@ _API_CREATE_OBJ_TYPE_NAMES: Dict[APIClassType, str] = {
     hg_models.Criterion: 'Create' + hg_models.Criterion.__name__,
     hg_models.Annotation: 'Create' + hg_models.Annotation.__name__,
     hg_models.HandgradingResult: 'Create' + hg_models.HandgradingResult.__name__,
-    # hg_models.CriterionResult: 'Create' + hg_models.CriterionResult.__name__,
+    hg_models.CriterionResult: 'Create' + hg_models.CriterionResult.__name__,
     hg_models.AppliedAnnotation: 'Create' + hg_models.AppliedAnnotation.__name__,
     hg_models.Comment: 'Create' + hg_models.Comment.__name__,
     # hg_models.Location: hg_models.Location.__name__,
@@ -281,12 +285,12 @@ _API_UPDATE_OBJ_TYPE_NAMES: Dict[APIClassType, str] = {
     ag_models.Project: 'Update' + ag_models.Project.__name__,
     # ag_models.UltimateSubmissionPolicy: ag_models.UltimateSubmissionPolicy.__name__,
     ag_models.ExpectedStudentFile: 'Update' + ag_models.ExpectedStudentFile.__name__,
-    # ag_models.InstructorFile: 'Update' + ag_models.InstructorFile.__name__,
+    ag_models.InstructorFile: 'Update' + ag_models.InstructorFile.__name__,
     ag_models.DownloadTask: 'Update' + ag_models.DownloadTask.__name__,
     # ag_models.DownloadType: ag_models.DownloadType.__name__,
     # ag_models.Group: 'Update' + ag_models.Group.__name__,
     # ag_models.GroupInvitation: 'Update' + ag_models.GroupInvitation.__name__,
-    # ag_models.Submission: 'Update' + ag_models.Submission.__name__,
+    ag_models.Submission: 'Update' + ag_models.Submission.__name__,
 
     # ag_models.Command: ag_models.Command.__name__,
 
@@ -325,7 +329,7 @@ _API_UPDATE_OBJ_TYPE_NAMES: Dict[APIClassType, str] = {
     hg_models.HandgradingResult: 'Update' + hg_models.HandgradingResult.__name__,
     hg_models.CriterionResult: 'Update' + hg_models.CriterionResult.__name__,
     # hg_models.AppliedAnnotation: 'Update' + hg_models.AppliedAnnotation.__name__,
-    # hg_models.Comment: 'Update' + hg_models.Comment.__name__,
+    hg_models.Comment: 'Update' + hg_models.Comment.__name__,
     # hg_models.Location: hg_models.Location.__name__,
 
     MutationTestSuiteHintConfig: 'Update' + MutationTestSuiteHintConfig.__name__,
@@ -375,19 +379,11 @@ class APIClassSchemaGenerator:
             }
         }
 
-    def generate_create_model_schema(self) -> SchemaObject | None:
-        return None
+    def generate_create_model_schema(self) -> SchemaObject:
+        raise NotImplementedError
 
-    def generate_update_model_schema(self) -> SchemaObject | None:
-        return None
-
-    # Generate a version of the schema for this class that includes
-    # only the fields that are allowed in create (POST) and update (PATCH)
-    # requests.
-    def generate_request_body_schema(
-        self, *, include_required: bool
-    ) -> Optional[SchemaObject]:
-        return None
+    def generate_update_model_schema(self) -> SchemaObject:
+        raise NotImplementedError
 
     def _field_names(self) -> Sequence[str]:
         return []
@@ -404,12 +400,8 @@ class HasToDictMixinSchemaGenerator(APIClassSchemaGenerator):
 
     def generate(self) -> SchemaObject:
         result = super().generate()
-        return (
-            super().generate()
-            | {
-                'required': self._get_required_field_names()
-            }
-        )
+        result['required'] = self._get_required_field_names()
+        return result
 
     def __init__(self, class_: Type[ToDictMixin]):
         self._class = class_
@@ -443,7 +435,7 @@ class AGModelSchemaGenerator(HasToDictMixinSchemaGenerator):
             if self._field_is_required_on_get(field)
         ]
 
-    def generate_create_model_schema(self) -> SchemaObject | None:
+    def generate_create_model_schema(self) -> SchemaObject:
         result: SchemaObject = {
             'type': 'object',
             'properties': {
@@ -458,10 +450,7 @@ class AGModelSchemaGenerator(HasToDictMixinSchemaGenerator):
         }
         return result
 
-
-    def generate_request_body_schema(
-        self, *, include_required: bool
-    ) -> Optional[SchemaObject]:
+    def generate_update_model_schema(self) -> SchemaObject:
         result: SchemaObject = {
             'type': 'object',
             'properties': {
@@ -473,14 +462,13 @@ class AGModelSchemaGenerator(HasToDictMixinSchemaGenerator):
                 for name in self._editable_field_names()
             }
         }
-        if include_required:
-            result['required'] = self._get_required_on_create_fields()
+
         return result
 
     def _editable_field_names(self) -> Sequence[str]:
         return self._class.get_editable_fields()
 
-    def _settable_on_create_fields_names(self) -> list[str]:
+    def _settable_on_create_fields_names(self) -> Sequence[str]:
         if self._class in self._settable_on_create_field_names_override:
             return self._settable_on_create_field_names_override[self._class]
 
@@ -559,17 +547,16 @@ class DictSerializableSchemaGenerator(HasToDictMixinSchemaGenerator):
         self._class = class_
 
     def generate(self) -> SchemaObject:
+        properties = dict[str, OrRef[SchemaObject]]()
+        for name in self._field_names():
+            schema = _get_py_type_schema(self._class.get_field_type(name))
+            if is_not_ref(schema):
+                schema['description'] = self._class.get_field_descriptions().get(name, '')
+            properties[name] = schema
+
         return {
             'type': 'object',
-            'properties': {
-
-                name: {
-                    'description': self._class.get_field_descriptions().get(name, ''),
-                    # See if type checking works with dict union in Python 3.9
-                    **_get_py_type_schema(self._class.get_field_type(name))
-                }
-                for name in self._field_names()
-            },
+            'properties': properties,
             'required': self._get_required_field_names()
         }
 
@@ -791,7 +778,7 @@ _PROP_FIELD_IS_REQUIRED_OVERRIDES: Dict[APIClassType, Dict[str, bool]] = {
     }
 }
 
-_CREATE_BODY_OVERRIDES: Dict[APIClassType, SchemaObject] = {
+_CREATE_BODY_OVERRIDES: Dict[APIClassType, SchemaObject | None] = {
     ag_models.InstructorFile: {
         'type': 'object',
         'properties': {
@@ -873,8 +860,18 @@ _CREATE_BODY_OVERRIDES: Dict[APIClassType, SchemaObject] = {
 
 # FIXME: required fields on result fdbk objects
 
-_UPDATE_BODY_OVERRIDES: Dict[APIClassType, SchemaObject] = {
-    # FIXME: instructor file
+_UPDATE_BODY_OVERRIDES: Dict[APIClassType, SchemaObject | None] = {
+    ag_models.InstructorFile: {
+        'type': 'object',
+        'properties': {
+            'file_obj': {
+                'type': 'string',
+                'format': 'binary',
+                'description': 'The form-encoded file.'
+            }
+        }
+    },
+
     ag_models.DownloadTask: None,
 }
 
@@ -922,7 +919,7 @@ def _get_py_type_schema(type_: type) -> OrRef[SchemaObject]:
     # assert not isinstance(type_, ForwardRef), f'ForwardRef detected: {ForwardRef}'
 
     if type_ in _PY_ATTR_TYPES:
-        return _PY_ATTR_TYPES[type_]
+        return copy.deepcopy(_PY_ATTR_TYPES[type_])
 
     if issubclass(type_, Enum):
         return {'allOf': [as_schema_ref(type_)]}
@@ -950,6 +947,19 @@ def as_create_schema_ref(type_: APIClassType) -> ReferenceObject:
 
 def as_update_schema_ref(type_: APIClassType) -> ReferenceObject:
     return {'$ref': f'#/components/schemas/{_API_UPDATE_OBJ_TYPE_NAMES[type_]}'}
+
+
+# Once TypeIs is added to typing_extensions and mypy, we can replace
+# this and assert_not_ref below with TypeIs.
+_MaybeRefType = TypeVar('_MaybeRefType', bound=Mapping[str, object])
+
+
+def is_ref(obj: OrRef[_MaybeRefType]) -> TypeGuard[_MaybeRefType]:
+    return '$ref' in obj
+
+
+def is_not_ref(obj: OrRef[_MaybeRefType]) -> TypeGuard[_MaybeRefType]:
+    return '$ref' not in obj
 
 
 _NonRefType = TypeVar('_NonRefType', bound=Mapping[str, object])

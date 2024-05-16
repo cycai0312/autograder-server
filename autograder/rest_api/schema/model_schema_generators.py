@@ -400,7 +400,8 @@ class HasToDictMixinSchemaGenerator(APIClassSchemaGenerator):
 
     def generate(self) -> SchemaObject:
         result = super().generate()
-        result['required'] = self._get_required_field_names()
+        if (required_field_names := self._get_required_field_names()):
+            result['required'] = required_field_names
         return result
 
     def __init__(self, class_: Type[ToDictMixin]):
@@ -446,8 +447,10 @@ class AGModelSchemaGenerator(HasToDictMixinSchemaGenerator):
                 )
                 for name in self._settable_on_create_fields_names()
             },
-            'required': self._get_required_on_create_fields()
         }
+        if (required_on_create_fields := self._get_required_on_create_fields()):
+            result['required'] = required_on_create_fields
+
         return result
 
     def generate_update_model_schema(self) -> SchemaObject:

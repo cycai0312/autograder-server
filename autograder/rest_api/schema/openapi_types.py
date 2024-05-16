@@ -50,11 +50,8 @@ class PathItemObject(TypedDict, total=False):
     servers: FIXME_TYPE
 
 
-class _OperationObjectRequired(TypedDict):
-    responses: Dict[str, OrRef[ResponseObject]]
-
-
-class OperationObject(_OperationObjectRequired, total=False):
+class OperationObject(TypedDict, total=False):
+    responses: Required[Dict[str, OrRef[ResponseObject]]]
     tags: List[str]
     summary: str
     description: str

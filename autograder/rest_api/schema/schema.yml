@@ -338,7 +338,12 @@ paths:
       description: ''
       parameters: []
       requestBody:
-        $ref: '#/components/schemas/CreateCourse'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCourse'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -379,7 +384,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateCourse'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCourse'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -852,7 +862,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/CreateProject'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProject'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -893,7 +908,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateProject'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProject'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -1023,7 +1043,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateInstructorFile'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInstructorFile'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -1132,7 +1157,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/CreateExpectedStudentFile'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExpectedStudentFile'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -1173,7 +1203,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateExpectedStudentFile'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateExpectedStudentFile'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -1527,7 +1562,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateSubmission'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSubmission'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -1620,7 +1660,7 @@ paths:
                           type: string
                           format: datetime
                         submitter:
-                          type: strength
+                          type: string
                         status:
                           type: string
                           enum:
@@ -1869,7 +1909,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateSandboxDockerImage'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSandboxDockerImage'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -1927,7 +1972,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/CreateAGTestSuite'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAGTestSuite'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -2022,7 +2072,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateAGTestSuite'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAGTestSuite'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -2080,7 +2135,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/CreateAGTestCase'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAGTestCase'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -2175,7 +2235,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateAGTestCase'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAGTestCase'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -2233,7 +2298,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/CreateAGTestCommand'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAGTestCommand'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -2328,7 +2398,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateAGTestCommand'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAGTestCommand'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -2386,7 +2461,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/CreateMutationTestSuite'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMutationTestSuite'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -2481,7 +2561,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateMutationTestSuite'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMutationTestSuite'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -2539,7 +2624,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/CreateRerunSubmissionsTask'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRerunSubmissionsTask'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -3280,7 +3370,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/CreateHandgradingRubric'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHandgradingRubric'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -3321,7 +3416,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateHandgradingRubric'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateHandgradingRubric'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -3379,7 +3479,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/CreateAnnotation'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAnnotation'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -3420,7 +3525,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateAnnotation'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAnnotation'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -3532,7 +3642,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/CreateCriterion'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCriterion'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -3573,7 +3688,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateCriterion'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCriterion'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -3719,7 +3839,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateHandgradingResult'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateHandgradingResult'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -3826,7 +3951,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/CreateAppliedAnnotation'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAppliedAnnotation'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -3904,7 +4034,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/CreateComment'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateComment'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -3945,7 +4080,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateComment'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateComment'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -4003,7 +4143,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/CreateCriterionResult'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCriterionResult'
+        required: true
+        description: ''
       responses:
         '201':
           content:
@@ -4044,7 +4189,12 @@ paths:
         schema:
           type: string
       requestBody:
-        $ref: '#/components/schemas/UpdateCriterionResult'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCriterionResult'
+        required: true
+        description: ''
       responses:
         '200':
           content:
@@ -5320,7 +5470,11 @@ components:
           description: The form-encoded file.
     UpdateInstructorFile:
       type: object
-      properties: {}
+      properties:
+        file_obj:
+          type: string
+          format: binary
+          description: The form-encoded file.
     DownloadTask:
       type: object
       properties:
@@ -5525,9 +5679,9 @@ components:
         pk:
           type: integer
         group:
-          description: "The SubmissionGroup that this submission belongs to. Note\n\
-            \            that this field indirectly links this Submission object to\
-            \ a\n            Project.\n            This field is REQUIRED."
+          description: "The Group that this submission belongs to. Note\n        \
+            \    that this field indirectly links this Submission object to a\n  \
+            \          Project.\n            This field is REQUIRED."
           nullable: false
           type: integer
         timestamp:
@@ -8103,7 +8257,6 @@ components:
             description: ''
             nullable: false
             type: integer
-      required: []
     HandgradingRubric:
       type: object
       properties:
@@ -8215,7 +8368,6 @@ components:
           description: Whether handgraders can edit HandgradingResult.point_adjustment.
           nullable: false
           type: boolean
-      required: []
     UpdateHandgradingRubric:
       type: object
       properties:
@@ -8313,7 +8465,6 @@ components:
             \ score\n                     when selected."
           nullable: false
           type: number
-      required: []
     UpdateCriterion:
       type: object
       properties:
@@ -8399,7 +8550,6 @@ components:
             \ of\n                     this annotation. Must be None or non-positive."
           nullable: true
           type: number
-      required: []
     UpdateAnnotation:
       type: object
       properties:
@@ -8445,7 +8595,7 @@ components:
           allOf:
           - $ref: '#/components/schemas/HandgradingRubric'
         group:
-          description: The SubmissionGroup that this HandgradingResult is for.
+          description: The Group that this HandgradingResult is for.
           nullable: false
           type: integer
         applied_annotations:
@@ -8523,7 +8673,6 @@ components:
             \                     grading this group's submission."
           nullable: false
           type: boolean
-      required: []
     UpdateHandgradingResult:
       type: object
       properties:
@@ -8837,7 +8986,6 @@ components:
             \         See \"obfuscated_mutant_names\" for more information."
           nullable: false
           type: string
-      required: []
     UpdateMutationTestSuiteHintConfig:
       type: object
       properties:

@@ -110,7 +110,15 @@ class AGViewSchemaGenerator(AutoSchema):
         )
         base_result['responses']['201'] = response_schema
 
-        base_result['requestBody'] = as_create_schema_ref(self.get_api_class())
+        base_result['requestBody'] = RequestBodyObject(
+            content={
+                'application/json': {
+                    'schema': as_create_schema_ref(self.get_api_class())
+                }
+            },
+            required=True,
+            description='',
+        )
 
         return base_result
 
@@ -128,7 +136,15 @@ class AGViewSchemaGenerator(AutoSchema):
             as_schema_ref(self.get_api_class())
         )
 
-        base_result['requestBody'] = as_update_schema_ref(self.get_api_class())
+        base_result['requestBody'] = RequestBodyObject(
+            content={
+                'application/json': {
+                    'schema': as_update_schema_ref(self.get_api_class())
+                }
+            },
+            required=True,
+            description='',
+        )
 
         return base_result
 

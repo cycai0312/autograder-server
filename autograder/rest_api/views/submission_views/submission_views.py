@@ -448,7 +448,7 @@ _SUBMISSION_TIMING_SCHEMA = {
     'properties': {
         'project_id': {'type': 'integer'},
         'timestamp': {'type': 'string', 'format': 'datetime'},
-        'submitter': {'type': 'strength'},
+        'submitter': {'type': 'string'},
         'status': {'type': 'string', 'enum': ag_models.Submission.GradingStatus.values},
         'error_msg': {'type': 'string'},
         'grading_start_time': {'type': 'string', 'format': 'datetime'},

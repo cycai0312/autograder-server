@@ -103,10 +103,10 @@ class MutationTestSuiteHintConfigTestCase(UnitTestBase):
 
     def test_error_invalid_reset_timezone(self) -> None:
         with self.assertRaises(ValidationError) as cm:
-                MutationTestSuiteHintConfig.objects.validate_and_create(
-                    mutation_test_suite=self.mutation_test_suite,
-                    submission_limit_reset_timezone='nope'
-                )
+            MutationTestSuiteHintConfig.objects.validate_and_create(
+                mutation_test_suite=self.mutation_test_suite,
+                submission_limit_reset_timezone='nope'
+            )
 
         self.assertIn('submission_limit_reset_timezone', cm.exception.message_dict)
 

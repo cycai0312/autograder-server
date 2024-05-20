@@ -1412,14 +1412,9 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                member_names:
-                  type: array
-                  items:
-                    type: string
-                    format: username
+              $ref: '#/components/schemas/UpdateGroup'
         required: true
+        description: ''
       responses:
         '200':
           content:
@@ -5618,6 +5613,25 @@ components:
             format: username
       required:
       - member_names
+    UpdateGroup:
+      type: object
+      properties:
+        member_names:
+          description: A list of usernames of the group members, sorted alphabetically.
+          type: array
+          items:
+            type: string
+        extended_due_date:
+          description: "When this field is set, it indicates that members\n      \
+            \      of this submission group can submit until this specified\n    \
+            \        date, overriding the project closing time.\n            Default\
+            \ value: None"
+          nullable: true
+          type: string
+          format: date-time
+        bonus_submissions_remaining:
+          description: The number of unused bonus submission tokens this group has.
+          type: integer
     GroupInvitation:
       type: object
       properties:

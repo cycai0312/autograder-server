@@ -5,8 +5,8 @@ from decimal import Decimal
 from enum import Enum
 from functools import singledispatch
 from typing import (
-    Any, Dict, List, Mapping, Optional, Sequence, Type, TypeGuard, TypeVar, Union, cast, get_args, get_origin,
-    get_type_hints
+    Any, Dict, List, Mapping, Sequence, Type, TypeGuard, TypeVar, Union, cast, get_args,
+    get_origin, get_type_hints
 )
 
 import django.contrib.postgres.fields as pg_fields
@@ -222,115 +222,59 @@ _API_OBJ_TYPE_NAMES: Dict[APIClassType, str] = {
 }
 
 _API_CREATE_OBJ_TYPE_NAMES: Dict[APIClassType, str] = {
-    # User: 'User',
     ag_models.Course: 'Create' + ag_models.Course.__name__,
-    # ag_models.Semester: ag_models.Semester.__name__,
     ag_models.Project: 'Create' + ag_models.Project.__name__,
-    # ag_models.UltimateSubmissionPolicy: ag_models.UltimateSubmissionPolicy.__name__,
     ag_models.ExpectedStudentFile: 'Create' + ag_models.ExpectedStudentFile.__name__,
     ag_models.InstructorFile: 'Create' + ag_models.InstructorFile.__name__,
     ag_models.DownloadTask: 'Create' + ag_models.DownloadTask.__name__,
-    # ag_models.DownloadType: ag_models.DownloadType.__name__,
     ag_models.Group: 'Create' + ag_models.Group.__name__,
     ag_models.GroupInvitation: 'Create' + ag_models.GroupInvitation.__name__,
     ag_models.Submission: 'Create' + ag_models.Submission.__name__,
 
-    # ag_models.Command: ag_models.Command.__name__,
 
-    # ag_models.SandboxDockerImage: ag_models.SandboxDockerImage.__name__,
     ag_models.BuildSandboxDockerImageTask: 'BuildSandboxDockerImage',
-    # ag_models.BuildImageStatus: ag_models.BuildImageStatus.__name__,
     ag_models.AGTestSuite: 'Create' + ag_models.AGTestSuite.__name__,
-    # ag_models.AGTestSuiteFeedbackConfig: 'AGTestSuiteFeedbackConfig',
     ag_models.AGTestCase: 'Create' + ag_models.AGTestCase.__name__,
-    # ag_models.AGTestCaseFeedbackConfig: 'AGTestCaseFeedbackConfig',
     ag_models.AGTestCommand: 'Create' + ag_models.AGTestCommand.__name__,
-    # ag_models.AGTestCommandFeedbackConfig: 'AGTestCommandFeedbackConfig',
-
-    # ag_models.StdinSource: ag_models.StdinSource.__name__,
-    # ag_models.ExpectedOutputSource: ag_models.ExpectedOutputSource.__name__,
-    # ag_models.ExpectedReturnCode: ag_models.ExpectedReturnCode.__name__,
-    # ag_models.ValueFeedbackLevel: ag_models.ValueFeedbackLevel.__name__,
-
-    # SubmissionResultFeedback: SubmissionResultFeedback.__name__,
-    # AGTestSuiteResultFeedback: AGTestSuiteResultFeedback.__name__,
-    # AGTestCaseResultFeedback: AGTestCaseResultFeedback.__name__,
-    # AGTestCommandResultFeedback: AGTestCommandResultFeedback.__name__,
-    # ag_models.FeedbackCategory: ag_models.FeedbackCategory.__name__,
 
     ag_models.MutationTestSuite: 'Create' + ag_models.MutationTestSuite.__name__,
-    # ag_models.MutationTestSuiteFeedbackConfig: ag_models.MutationTestSuiteFeedbackConfig.__name__,
-    # ag_models.BugsExposedFeedbackLevel: ag_models.BugsExposedFeedbackLevel.__name__,
-    # ag_models.MutationTestSuiteResult.FeedbackCalculator: 'MutationTestSuiteResultFeedback',
 
     ag_models.RerunSubmissionsTask: 'Create' + ag_models.RerunSubmissionsTask.__name__,
 
     hg_models.HandgradingRubric: 'Create' + hg_models.HandgradingRubric.__name__,
-    # hg_models.PointsStyle: hg_models.PointsStyle.__name__,
     hg_models.Criterion: 'Create' + hg_models.Criterion.__name__,
     hg_models.Annotation: 'Create' + hg_models.Annotation.__name__,
     hg_models.HandgradingResult: 'Create' + hg_models.HandgradingResult.__name__,
     hg_models.CriterionResult: 'Create' + hg_models.CriterionResult.__name__,
     hg_models.AppliedAnnotation: 'Create' + hg_models.AppliedAnnotation.__name__,
     hg_models.Comment: 'Create' + hg_models.Comment.__name__,
-    # hg_models.Location: hg_models.Location.__name__,
 
     MutationTestSuiteHintConfig: 'Create ' + MutationTestSuiteHintConfig.__name__,
 }
 
 _API_UPDATE_OBJ_TYPE_NAMES: Dict[APIClassType, str] = {
-    # User: 'User',
     ag_models.Course: 'Update' + ag_models.Course.__name__,
-    # ag_models.Semester: ag_models.Semester.__name__,
     ag_models.Project: 'Update' + ag_models.Project.__name__,
-    # ag_models.UltimateSubmissionPolicy: ag_models.UltimateSubmissionPolicy.__name__,
     ag_models.ExpectedStudentFile: 'Update' + ag_models.ExpectedStudentFile.__name__,
     ag_models.InstructorFile: 'Update' + ag_models.InstructorFile.__name__,
     ag_models.DownloadTask: 'Update' + ag_models.DownloadTask.__name__,
-    # ag_models.DownloadType: ag_models.DownloadType.__name__,
-    # ag_models.Group: 'Update' + ag_models.Group.__name__,
-    # ag_models.GroupInvitation: 'Update' + ag_models.GroupInvitation.__name__,
+    ag_models.Group: 'Update' + ag_models.Group.__name__,
     ag_models.Submission: 'Update' + ag_models.Submission.__name__,
 
-    # ag_models.Command: ag_models.Command.__name__,
 
     ag_models.SandboxDockerImage: 'Update' + ag_models.SandboxDockerImage.__name__,
-    # ag_models.BuildSandboxDockerImageTask: 'Update' + ag_models.BuildSandboxDockerImageTask.__name__,
-    # ag_models.BuildImageStatus: ag_models.BuildImageStatus.__name__,
     ag_models.AGTestSuite: 'Update' + ag_models.AGTestSuite.__name__,
-    # ag_models.AGTestSuiteFeedbackConfig: 'AGTestSuiteFeedbackConfig',
     ag_models.AGTestCase: 'Update' + ag_models.AGTestCase.__name__,
-    # ag_models.AGTestCaseFeedbackConfig: 'AGTestCaseFeedbackConfig',
     ag_models.AGTestCommand: 'Update' + ag_models.AGTestCommand.__name__,
-    # ag_models.AGTestCommandFeedbackConfig: 'AGTestCommandFeedbackConfig',
-
-    # ag_models.StdinSource: ag_models.StdinSource.__name__,
-    # ag_models.ExpectedOutputSource: ag_models.ExpectedOutputSource.__name__,
-    # ag_models.ExpectedReturnCode: ag_models.ExpectedReturnCode.__name__,
-    # ag_models.ValueFeedbackLevel: ag_models.ValueFeedbackLevel.__name__,
-
-    # SubmissionResultFeedback: SubmissionResultFeedback.__name__,
-    # AGTestSuiteResultFeedback: AGTestSuiteResultFeedback.__name__,
-    # AGTestCaseResultFeedback: AGTestCaseResultFeedback.__name__,
-    # AGTestCommandResultFeedback: AGTestCommandResultFeedback.__name__,
-    # ag_models.FeedbackCategory: ag_models.FeedbackCategory.__name__,
 
     ag_models.MutationTestSuite: 'Update' + ag_models.MutationTestSuite.__name__,
-    # ag_models.MutationTestSuiteFeedbackConfig: ag_models.MutationTestSuiteFeedbackConfig.__name__,
-    # ag_models.BugsExposedFeedbackLevel: ag_models.BugsExposedFeedbackLevel.__name__,
-    # ag_models.MutationTestSuiteResult.FeedbackCalculator: 'MutationTestSuiteResultFeedback',
-
-    # ag_models.RerunSubmissionsTask: 'Update' + ag_models.RerunSubmissionsTask.__name__,
 
     hg_models.HandgradingRubric: 'Update' + hg_models.HandgradingRubric.__name__,
-    # hg_models.PointsStyle: hg_models.PointsStyle.__name__,
     hg_models.Criterion: 'Update' + hg_models.Criterion.__name__,
     hg_models.Annotation: 'Update' + hg_models.Annotation.__name__,
     hg_models.HandgradingResult: 'Update' + hg_models.HandgradingResult.__name__,
     hg_models.CriterionResult: 'Update' + hg_models.CriterionResult.__name__,
-    # hg_models.AppliedAnnotation: 'Update' + hg_models.AppliedAnnotation.__name__,
     hg_models.Comment: 'Update' + hg_models.Comment.__name__,
-    # hg_models.Location: hg_models.Location.__name__,
 
     MutationTestSuiteHintConfig: 'Update' + MutationTestSuiteHintConfig.__name__,
 }
@@ -469,7 +413,14 @@ class AGModelSchemaGenerator(HasToDictMixinSchemaGenerator):
         return result
 
     def _editable_field_names(self) -> Sequence[str]:
+        if self._class in self._editable_field_names_override:
+            return self._editable_field_names_override[self._class]
+
         return self._class.get_editable_fields()
+
+    _editable_field_names_override: Dict[APIClassType, list[str]] = {
+        ag_models.Group: ['member_names'] + list(ag_models.Group.get_editable_fields())
+    }
 
     def _settable_on_create_fields_names(self) -> Sequence[str]:
         if self._class in self._settable_on_create_field_names_override:

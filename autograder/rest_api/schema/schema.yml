@@ -4271,6 +4271,12 @@ paths:
                               total_points_possible:
                                 type: number
                                 format: double
+                          has_handgradeable_submission:
+                            description: When this value is false, indicates that
+                              this group does not have any submissions whose status
+                              is `finished_grading` according to the autograder test
+                              cases.
+                            type: boolean
       tags:
       - projects
       - handgrading_results

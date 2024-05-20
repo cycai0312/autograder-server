@@ -9,6 +9,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10"]
+        node-version: [16.x]
 
     services:  # Required for checking migrations and schema
       postgres:
@@ -46,8 +47,11 @@ jobs:
           pycodestyle autograder
           pydocstyle autograder
           ./run_mypy.sh
-         python3 manage.py makemigrations --check
-         python3 manage.py generateschema --generator_class autograder.rest_api.schema.AGSchemaGenerator | diff -q - autograder/rest_api/schema/schema.yml
+          python3 manage.py makemigrations --check
+          python3 manage.py generateschema --generator_class autograder.rest_api.schema.AGSchemaGenerator | diff -q - autograder/rest_api/schema/schema.yml
+      - name: Validate schema
+        run: |
+
 
   test:
     runs-on: ubuntu-20.04

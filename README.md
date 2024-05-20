@@ -27,11 +27,11 @@ git checkout develop
 Ubuntu: https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce-1
 
 ## Install Postgres
-Postgres is required to run the test suite. The simplest way to set this up is to run an official Postgres docker container. Replace <version> with your desired version of postgres:
+Postgres is required to run the test suite. The simplest way to set this up is to run an official Postgres docker container.
+Invoke the script below to start a postgres container for development:
 ```
-docker run -itd postgres:<version>
+bash dev_scripts/start_postgres_dev.sh
 ```
-# FIXME: get the correct command from other machine^^^
 
 ## Install Redis Server
 ```
@@ -103,7 +103,7 @@ endpoint details.
 
 To update schema.yml, run:
 ```
-./manage.py generateschema --generator_class autograder.rest_api.schema.AGSchemaGenerator > autograder/rest_api/schema/schema.yml
+bash dev_scripts/generate_schema.sh
 ```
 
 If you are running the full development stack, you may skip the next step.
@@ -119,14 +119,6 @@ Then navigate to localhost:8080 in your browser. To change the port, change `808
 In addition to the items listed here, all source code must follow our
 [Python coding standards](https://github.com/eecs-autograder/autograder.io/blob/master/coding_standards_python.md).
 
-This project uses `pycodestyle`, `pydocstyle`, and `mypy` as linters. They can
-be run using the following commands:
-```
-pycodestyle autograder
-pydocstyle autograder
-sh run_mypy.sh
-```
-
 Use these import aliases for commonly-used modules:
     - `import autograder.core.models as ag_models`
         - NOTE: Do NOT import `autograder.core.models` from modules inside
@@ -136,3 +128,14 @@ Use these import aliases for commonly-used modules:
     - `import autograder.rest_api.serializers as ag_serializers`
     - `import autograder.core.utils as core_ut`
     - `import autograder.handgrading.models as hg_models`
+
+## Linters
+You can run all of the required linter checks by invoking:
+```
+bash lint.sh
+```
+
+In addition to running pycodestyle, pydocstyle, and mypy, this will also check that migrations & API schema are up to date and that the API schema is valid.
+
+Note that validating the API schema requires Node 16 (newer versions may work as well).
+You can install Node 16 with [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating).

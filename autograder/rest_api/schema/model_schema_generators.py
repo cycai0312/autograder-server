@@ -368,6 +368,7 @@ class HasToDictMixinSchemaGenerator(APIClassSchemaGenerator):
         ]
     }
 
+
 class AGModelSchemaGenerator(HasToDictMixinSchemaGenerator):
     _class: Type[AutograderModel]
 

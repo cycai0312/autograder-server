@@ -332,6 +332,15 @@ class ListHandgradingResultsView(AGModelAPIView):
                                                 'type': 'number', 'format': 'double'
                                             },
                                         }
+                                    },
+                                    'has_handgradeable_submission': {
+                                        'description': (
+                                            'When this value is false, indicates that '
+                                            'this group does not have any submissions whose '
+                                            'status is `finished_grading` according '
+                                            'to the autograder test cases.'
+                                        ),
+                                        'type': 'boolean'
                                     }
                                 }
                             }
@@ -391,6 +400,12 @@ class ListHandgradingResultsView(AGModelAPIView):
                 data['handgrading_result'] = utils.filter_dict(
                     group.handgrading_result.to_dict(),
                     ['finished_grading', 'total_points', 'total_points_possible'])
+            finished_grading_results_exist = any(
+                submission.status == ag_models.Submission.GradingStatus.finished_grading
+                for submission in group.submissions.all()
+            )
+
+            data['has_handgradeable_submission'] = finished_grading_results_exist
 
             results.append(data)
 

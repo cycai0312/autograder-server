@@ -651,9 +651,10 @@ class _GroupHGDataConfig:
         data = group.to_dict()
         match self:
             # A finished_grading submission with a handgrading result
-            case _GroupHGDataConfig(has_handgrading_result=True,
-                                    submission_status=ag_models.Submission.
-                                    GradingStatus.finished_grading):
+            case _GroupHGDataConfig(
+                has_handgrading_result=True,
+                submission_status=ag_models.Submission.GradingStatus.finished_grading
+            ):
                 hg_result = hg_models.HandgradingResult.objects.validate_and_create(
                     submission=submission,
                     group=group,
@@ -669,9 +670,10 @@ class _GroupHGDataConfig:
 
             # A finished_grading submission without a handgrading result
             # (has_handgradeable_submission would still be true in this case)
-            case _GroupHGDataConfig(has_handgrading_result=False,
-                                    submission_status=ag_models.Submission.
-                                    GradingStatus.finished_grading):
+            case _GroupHGDataConfig(
+                has_handgrading_result=False,
+                submission_status=ag_models.Submission.GradingStatus.finished_grading
+            ):
                 data['handgrading_result'] = None
                 data['has_handgradeable_submission'] = True
 
@@ -793,10 +795,11 @@ class ListHandgradingResultsViewTestCase(UnitTestBase):
                     submission_status=Submission.GradingStatus.rejected,
                     has_handgrading_result=False)] * 2)
 
-    def do_handgrading_results_test(self, user: User, *, num_groups: int = None,
-                                    group_handgrading_data_configs:
-                                    list[_GroupHGDataConfig] | None = None,
-                                    page_size: int = None, page_num: int = None):
+    def do_handgrading_results_test(
+        self, user: User, *, num_groups: int = None,
+        group_handgrading_data_configs: list[_GroupHGDataConfig] | None = None,
+        page_size: int = None, page_num: int = None
+    ):
         """Perform the test for the handgrading results view."""
         if group_handgrading_data_configs is None:
             # default initialization of submission_configs to all finished grading submissions

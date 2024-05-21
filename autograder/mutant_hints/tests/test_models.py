@@ -95,11 +95,20 @@ class MutationTestSuiteHintConfigTestCase(UnitTestBase):
 
         for invalid in invalid_dicts:
             with self.assertRaises(ValidationError) as cm:
-                config = MutationTestSuiteHintConfig.objects.validate_and_create(
+                MutationTestSuiteHintConfig.objects.validate_and_create(
                     mutation_test_suite=self.mutation_test_suite,
                     hints_by_mutant_name=invalid,
                 )
             self.assertIn('hints_by_mutant_name', cm.exception.message_dict)
+
+    def test_error_invalid_reset_timezone(self) -> None:
+        with self.assertRaises(ValidationError) as cm:
+            MutationTestSuiteHintConfig.objects.validate_and_create(
+                mutation_test_suite=self.mutation_test_suite,
+                hint_limit_reset_timezone='nope'
+            )
+
+        self.assertIn('hint_limit_reset_timezone', cm.exception.message_dict)
 
     def test_serialization(self) -> None:
         config = MutationTestSuiteHintConfig.objects.validate_and_create(

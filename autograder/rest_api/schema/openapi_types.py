@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Literal, TYPE_CHECKING, TypedDict, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, TypedDict, TypeVar, Union
+
+from typing_extensions import Required
 
 if TYPE_CHECKING:
     from rest_framework.schemas.openapi import DRFOpenAPIInfo
@@ -48,17 +50,14 @@ class PathItemObject(TypedDict, total=False):
     servers: FIXME_TYPE
 
 
-class _OperationObjectRequired(TypedDict):
-    responses: Dict[str, OrRef[ResponseObject]]
-
-
-class OperationObject(_OperationObjectRequired, total=False):
+class OperationObject(TypedDict, total=False):
+    responses: Required[Dict[str, OrRef[ResponseObject]]]
     tags: List[str]
     summary: str
     description: str
     operationId: str
     parameters: List[OrRef[ParameterObject]]
-    requestBody: RequestBodyObject
+    requestBody: OrRef[RequestBodyObject]
     deprecated: bool
     externalDocs: FIXME_TYPE
     callbacks: FIXME_TYPE
@@ -89,19 +88,16 @@ class SchemaObject(TypedDict, total=False):
     default: object
     maximum: Union[int, float]
 
-    # mypy doesn't support recursive types yet
-    items: _FauxRecursiveSchemaObject
-    properties: Dict[str, _FauxRecursiveSchemaObject]
-    anyOf: List[_FauxRecursiveSchemaObject]
-    allOf: List[_FauxRecursiveSchemaObject]
-    oneOf: List[_FauxRecursiveSchemaObject]
+    items: OrRef[SchemaObject]
+    properties: Dict[str, OrRef[SchemaObject]]
+    anyOf: List[OrRef[SchemaObject]]
+    allOf: List[OrRef[SchemaObject]]
+    oneOf: List[OrRef[SchemaObject]]
 
 
 ReferenceObject = TypedDict('ReferenceObject', {'$ref': str})
 _R = TypeVar('_R')
 OrRef = Union[_R, ReferenceObject]
-
-_FauxRecursiveSchemaObject = Any
 
 
 class _ResponseObjectRequired(TypedDict):
@@ -136,11 +132,8 @@ class ExampleObject(TypedDict, total=False):
     externalValue: str
 
 
-class _RequestBodyObjectRequired(TypedDict):
-    content: Dict[ContentType, MediaTypeObject]
-
-
-class RequestBodyObject(_RequestBodyObjectRequired, total=False):
+class RequestBodyObject(TypedDict, total=False):
+    content: Required[Dict[ContentType, MediaTypeObject]]
     description: str
     required: bool
 

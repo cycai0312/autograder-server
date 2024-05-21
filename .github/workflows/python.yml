@@ -9,6 +9,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10"]
+        node-version: [16.x]
 
     services:  # Required for checking migrations and schema
       postgres:
@@ -41,13 +42,13 @@ jobs:
           python -m pip install pip-tools
           pip-sync requirements.txt requirements-dev.txt
           python3 generate_secrets.py
-      - name: Lint with pycdestyle, pydocstyle, and mypy
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Lint code style, type check, check migrations are up to date, validate schema
         run: |
-          pycodestyle autograder
-          pydocstyle autograder
-          ./run_mypy.sh
-#          python3 manage.py makemigrations --check
-#          python3 manage.py generateschema --generator_class autograder.rest_api.schema.AGSchemaGenerator | diff -q - autograder/rest_api/schema/schema.yml
+          bash lint.sh
 
   test:
     runs-on: ubuntu-20.04

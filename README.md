@@ -27,18 +27,10 @@ git checkout develop
 Ubuntu: https://docs.docker.com/install/linux/docker-ce/ubuntu/#install-docker-ce-1
 
 ## Install Postgres
-If installing a newer version of postgres, replace "13" with the appropriate version.
+Postgres is required to run the test suite. The simplest way to set this up is to run an official Postgres docker container.
+Invoke the script below to start a postgres container for development:
 ```
-sudo apt-get install postgresql-13 postgresql-client-13 postgresql-contrib-13 postgresql-server-dev-13
-```
-Set a password for the 'postgres' user.
-```
-sudo -u postgres psql -c "alter user postgres with password 'postgres'"
-```
-If you choose a different password, you'll need to set the AG_DB_PASSWORD
-environment variable with your chosen password:
-```
-export AG_DB_PASSWORD=<password>
+bash dev_scripts/start_postgres_dev.sh
 ```
 
 ## Install Redis Server
@@ -62,6 +54,8 @@ pip-sync requirements.txt requirements-dev.txt
 
 You can then run `pipenv shell` to start a shell in the virtual environment,
 or if you prefer you can prefix the python commands below with `pipenv run`.
+
+If you run into errors installing psycopg2, please refer to https://www.psycopg.org/docs/install.html#build-prerequisites for troubleshooting tips.
 
 ### Updating Packages
 This section contains some useful reference commands for pip-tools.
@@ -109,7 +103,7 @@ endpoint details.
 
 To update schema.yml, run:
 ```
-./manage.py generateschema --generator_class autograder.rest_api.schema.AGSchemaGenerator > schema/schema.yml
+bash dev_scripts/generate_schema.sh
 ```
 
 If you are running the full development stack, you may skip the next step.
@@ -125,14 +119,6 @@ Then navigate to localhost:8080 in your browser. To change the port, change `808
 In addition to the items listed here, all source code must follow our
 [Python coding standards](https://github.com/eecs-autograder/autograder.io/blob/master/coding_standards_python.md).
 
-This project uses `pycodestyle`, `pydocstyle`, and `mypy` as linters. They can
-be run using the following commands:
-```
-pycodestyle autograder
-pydocstyle autograder
-sh run_mypy.sh
-```
-
 Use these import aliases for commonly-used modules:
     - `import autograder.core.models as ag_models`
         - NOTE: Do NOT import `autograder.core.models` from modules inside
@@ -142,3 +128,14 @@ Use these import aliases for commonly-used modules:
     - `import autograder.rest_api.serializers as ag_serializers`
     - `import autograder.core.utils as core_ut`
     - `import autograder.handgrading.models as hg_models`
+
+## Linters
+You can run all of the required linter checks by invoking:
+```
+bash lint.sh
+```
+
+In addition to running pycodestyle, pydocstyle, and mypy, this will also check that migrations & API schema are up to date and that the API schema is valid.
+
+Note that validating the API schema requires Node 16 (newer versions may work as well).
+You can install Node 16 with [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating).

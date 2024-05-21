@@ -5,8 +5,8 @@ from decimal import Decimal
 from enum import Enum
 from functools import singledispatch
 from typing import (
-    Any, Dict, List, Mapping, Optional, Sequence, Type, TypeVar, Union, cast, get_args, get_origin,
-    get_type_hints
+    Any, Dict, List, Mapping, Sequence, Type, TypeGuard, TypeVar, Union, cast, get_args,
+    get_origin, get_type_hints
 )
 
 import django.contrib.postgres.fields as pg_fields
@@ -27,16 +27,43 @@ from autograder.core.submission_feedback import (
     AGTestCaseResultFeedback, AGTestCommandResultFeedback, AGTestSuiteResultFeedback,
     SubmissionResultFeedback
 )
+from autograder.mutant_hints.models import (
+    MutantNameObfuscationChoices, MutationTestSuiteHintConfig, UnlockedHint
+)
 from autograder.rest_api.schema.openapi_types import (
     OrRef, ParameterObject, ReferenceObject, SchemaObject
 )
 
 
 def generate_model_schemas() -> Dict[str, OrRef[SchemaObject]]:
-    result: Dict[str, OrRef[SchemaObject]] = {
-        name: APIClassSchemaGenerator.factory(class_).generate()
-        for class_, name in _API_OBJ_TYPE_NAMES.items()
-    }
+    result: Dict[str, OrRef[SchemaObject]] = {}
+    for class_, name in _API_OBJ_TYPE_NAMES.items():
+        generator = APIClassSchemaGenerator.factory(class_)
+        result[name] = generator.generate()
+
+        if class_ in _API_CREATE_OBJ_TYPE_NAMES:
+            create_name = _API_CREATE_OBJ_TYPE_NAMES[class_]
+            if class_ in _CREATE_BODY_OVERRIDES:
+                # Do NOT combine these 2 if statements with and.
+                # This check allows setting an override to None to exclude it.
+                if (create_body := _CREATE_BODY_OVERRIDES[class_]) is not None:
+                    result[create_name] = create_body
+            else:
+                result[create_name] = (
+                    generator.generate_create_model_schema()
+                )
+
+        if class_ in _API_UPDATE_OBJ_TYPE_NAMES:
+            update_name = _API_UPDATE_OBJ_TYPE_NAMES[class_]
+            if class_ in _UPDATE_BODY_OVERRIDES:
+                # Do NOT combine these 2 if statements with and.
+                # This check allows setting an override to None to exclude it.
+                if (update_body := _UPDATE_BODY_OVERRIDES[class_]) is not None:
+                    result[update_name] = update_body
+            else:
+                result[update_name] = (
+                    generator.generate_update_model_schema()
+                )
 
     result['UserRoles'] = {
         'type': 'object',
@@ -45,7 +72,13 @@ def generate_model_schemas() -> Dict[str, OrRef[SchemaObject]]:
             'is_staff': {'type': 'boolean'},
             'is_student': {'type': 'boolean'},
             'is_handgrader': {'type': 'boolean'},
-        }
+        },
+        'required': [
+            'is_admin',
+            'is_staff',
+            'is_student',
+            'is_handgrader',
+        ],
     }
 
     result['SubmissionWithResults'] = {
@@ -55,7 +88,8 @@ def generate_model_schemas() -> Dict[str, OrRef[SchemaObject]]:
                 'type': 'object',
                 'properties': {
                     'results': as_schema_ref(SubmissionResultFeedback)
-                }
+                },
+                'required': ['results']
             }
         ]
     }
@@ -120,14 +154,6 @@ values:
     }
 
 
-def register_api_object_type_name(api_class: APIClassType, name: str | None = None) -> None:
-    global _API_OBJ_TYPE_NAMES
-    if name is None:
-        name = api_class.__name__
-
-    _API_OBJ_TYPE_NAMES[api_class] = name
-
-
 def get_api_object_type_name(api_class: APIClassType) -> str:
     return _API_OBJ_TYPE_NAMES[api_class]
 
@@ -189,6 +215,68 @@ _API_OBJ_TYPE_NAMES: Dict[APIClassType, str] = {
     hg_models.AppliedAnnotation: hg_models.AppliedAnnotation.__name__,
     hg_models.Comment: hg_models.Comment.__name__,
     hg_models.Location: hg_models.Location.__name__,
+
+    MutationTestSuiteHintConfig: MutationTestSuiteHintConfig.__name__,
+    MutantNameObfuscationChoices: MutantNameObfuscationChoices.__name__,
+    UnlockedHint: UnlockedHint.__name__,
+}
+
+_API_CREATE_OBJ_TYPE_NAMES: Dict[APIClassType, str] = {
+    ag_models.Course: 'Create' + ag_models.Course.__name__,
+    ag_models.Project: 'Create' + ag_models.Project.__name__,
+    ag_models.ExpectedStudentFile: 'Create' + ag_models.ExpectedStudentFile.__name__,
+    ag_models.InstructorFile: 'Create' + ag_models.InstructorFile.__name__,
+    ag_models.DownloadTask: 'Create' + ag_models.DownloadTask.__name__,
+    ag_models.Group: 'Create' + ag_models.Group.__name__,
+    ag_models.GroupInvitation: 'Create' + ag_models.GroupInvitation.__name__,
+    ag_models.Submission: 'Create' + ag_models.Submission.__name__,
+
+
+    ag_models.BuildSandboxDockerImageTask: 'BuildSandboxDockerImage',
+    ag_models.AGTestSuite: 'Create' + ag_models.AGTestSuite.__name__,
+    ag_models.AGTestCase: 'Create' + ag_models.AGTestCase.__name__,
+    ag_models.AGTestCommand: 'Create' + ag_models.AGTestCommand.__name__,
+
+    ag_models.MutationTestSuite: 'Create' + ag_models.MutationTestSuite.__name__,
+
+    ag_models.RerunSubmissionsTask: 'Create' + ag_models.RerunSubmissionsTask.__name__,
+
+    hg_models.HandgradingRubric: 'Create' + hg_models.HandgradingRubric.__name__,
+    hg_models.Criterion: 'Create' + hg_models.Criterion.__name__,
+    hg_models.Annotation: 'Create' + hg_models.Annotation.__name__,
+    hg_models.HandgradingResult: 'Create' + hg_models.HandgradingResult.__name__,
+    hg_models.CriterionResult: 'Create' + hg_models.CriterionResult.__name__,
+    hg_models.AppliedAnnotation: 'Create' + hg_models.AppliedAnnotation.__name__,
+    hg_models.Comment: 'Create' + hg_models.Comment.__name__,
+
+    MutationTestSuiteHintConfig: 'Create ' + MutationTestSuiteHintConfig.__name__,
+}
+
+_API_UPDATE_OBJ_TYPE_NAMES: Dict[APIClassType, str] = {
+    ag_models.Course: 'Update' + ag_models.Course.__name__,
+    ag_models.Project: 'Update' + ag_models.Project.__name__,
+    ag_models.ExpectedStudentFile: 'Update' + ag_models.ExpectedStudentFile.__name__,
+    ag_models.InstructorFile: 'Update' + ag_models.InstructorFile.__name__,
+    ag_models.DownloadTask: 'Update' + ag_models.DownloadTask.__name__,
+    ag_models.Group: 'Update' + ag_models.Group.__name__,
+    ag_models.Submission: 'Update' + ag_models.Submission.__name__,
+
+
+    ag_models.SandboxDockerImage: 'Update' + ag_models.SandboxDockerImage.__name__,
+    ag_models.AGTestSuite: 'Update' + ag_models.AGTestSuite.__name__,
+    ag_models.AGTestCase: 'Update' + ag_models.AGTestCase.__name__,
+    ag_models.AGTestCommand: 'Update' + ag_models.AGTestCommand.__name__,
+
+    ag_models.MutationTestSuite: 'Update' + ag_models.MutationTestSuite.__name__,
+
+    hg_models.HandgradingRubric: 'Update' + hg_models.HandgradingRubric.__name__,
+    hg_models.Criterion: 'Update' + hg_models.Criterion.__name__,
+    hg_models.Annotation: 'Update' + hg_models.Annotation.__name__,
+    hg_models.HandgradingResult: 'Update' + hg_models.HandgradingResult.__name__,
+    hg_models.CriterionResult: 'Update' + hg_models.CriterionResult.__name__,
+    hg_models.Comment: 'Update' + hg_models.Comment.__name__,
+
+    MutationTestSuiteHintConfig: 'Update' + MutationTestSuiteHintConfig.__name__,
 }
 
 APIClassType = Union[
@@ -235,15 +323,16 @@ class APIClassSchemaGenerator:
             }
         }
 
-    # Generate a version of the schema for this class that includes
-    # only the fields that are allowed in create (POST) and update (PATCH)
-    # requests.
-    def generate_request_body_schema(
-        self, *, include_required: bool
-    ) -> Optional[SchemaObject]:
-        return None
+    def generate_create_model_schema(self) -> SchemaObject:
+        raise NotImplementedError
+
+    def generate_update_model_schema(self) -> SchemaObject:
+        raise NotImplementedError
 
     def _field_names(self) -> Sequence[str]:
+        return []
+
+    def _editable_field_names(self) -> Sequence[str]:
         return []
 
 
@@ -253,11 +342,31 @@ HasToDictMixinType = TypeVar('HasToDictMixinType', bound=Type[ToDictMixin])
 class HasToDictMixinSchemaGenerator(APIClassSchemaGenerator):
     _class: Type[ToDictMixin]
 
+    def generate(self) -> SchemaObject:
+        result = super().generate()
+        if (required_field_names := self._get_required_field_names()):
+            result['required'] = required_field_names
+        return result
+
     def __init__(self, class_: Type[ToDictMixin]):
         self._class = class_
 
     def _field_names(self) -> Sequence[str]:
         return self._class.get_serializable_fields()
+
+    def _get_required_field_names(self) -> list[str]:
+        if self._class in self._required_field_names_override:
+            return self._required_field_names_override[self._class]
+
+        return list(self._field_names())
+
+    _required_field_names_override: Dict[Type[ToDictMixin], list[str]] = {
+        SubmissionResultFeedback: [
+            'pk',
+            'total_points',
+            'total_points_possible',
+        ]
+    }
 
 
 class AGModelSchemaGenerator(HasToDictMixinSchemaGenerator):
@@ -266,9 +375,13 @@ class AGModelSchemaGenerator(HasToDictMixinSchemaGenerator):
     def __init__(self, class_: Type[AutograderModel]):
         self._class = class_
 
-    def generate_request_body_schema(
-        self, *, include_required: bool
-    ) -> Optional[SchemaObject]:
+    def _get_required_field_names(self) -> list[str]:
+        return [
+            field for field in self._field_names()
+            if self._field_is_required_on_get(field)
+        ]
+
+    def generate_create_model_schema(self) -> SchemaObject:
         result: SchemaObject = {
             'type': 'object',
             'properties': {
@@ -276,22 +389,94 @@ class AGModelSchemaGenerator(HasToDictMixinSchemaGenerator):
                     _extract_field(name, self._class),
                     self._class,
                     name,
-                    include_readonly=True
                 )
-                for name in self._field_names()
-            }
+                for name in self._settable_on_create_fields_names()
+            },
         }
-        if include_required:
-            result['required'] = self._get_required_fields()
+        if (required_on_create_fields := self._get_required_on_create_fields()):
+            result['required'] = required_on_create_fields
+
         return result
 
-    def _get_required_fields(self) -> List[str]:
+    def generate_update_model_schema(self) -> SchemaObject:
+        result: SchemaObject = {
+            'type': 'object',
+            'properties': {
+                name: _get_field_schema(
+                    _extract_field(name, self._class),
+                    self._class,
+                    name,
+                )
+                for name in self._editable_field_names()
+            }
+        }
+
+        return result
+
+    def _editable_field_names(self) -> Sequence[str]:
+        if self._class in self._editable_field_names_override:
+            return self._editable_field_names_override[self._class]
+
+        return self._class.get_editable_fields()
+
+    _editable_field_names_override: Dict[APIClassType, list[str]] = {
+        ag_models.Group: ['member_names'] + list(ag_models.Group.get_editable_fields())
+    }
+
+    def _settable_on_create_fields_names(self) -> Sequence[str]:
+        if self._class in self._settable_on_create_field_names_override:
+            return self._settable_on_create_field_names_override[self._class]
+
+        return self._editable_field_names()
+
+    _settable_on_create_field_names_override: Dict[APIClassType, list[str]] = {
+        ag_models.RerunSubmissionsTask: [
+            'rerun_all_submissions',
+            'submission_pks',
+            'rerun_all_ag_test_suites',
+            'ag_test_suite_data',
+            'rerun_all_mutation_test_suites',
+            'mutation_suite_pks',
+        ],
+        hg_models.AppliedAnnotation: [
+            'annotation',
+            'location',
+        ],
+        hg_models.Comment: [
+            'text',
+            'location',
+        ]
+    }
+
+    def _get_required_on_create_fields(self) -> List[str]:
+        if self._class in self._required_on_create_field_names_override:
+            return self._required_on_create_field_names_override[self._class]
+
         return [
             field_name for field_name in self._class.get_serializable_fields()
-            if self._field_is_required(field_name)
+            if self._field_is_required_on_create(field_name)
         ]
 
-    def _field_is_required(self, field_name: str) -> bool:
+    _required_on_create_field_names_override: Dict[APIClassType, list[str]] = {
+        ag_models.AGTestCase: [
+            'name',
+        ],
+        hg_models.AppliedAnnotation: [
+            'annotation',
+            'location',
+        ],
+    }
+
+    # Returns true if the specified field will always be present in
+    # a GET request context.
+    def _field_is_required_on_get(self, field_name: str) -> bool:
+        override = _PROP_FIELD_IS_REQUIRED_OVERRIDES.get(self._class, {}).get(field_name, None)
+        if override is not None:
+            return override
+
+        return True
+
+    def _field_is_required_on_create(self, field_name: str) -> bool:
         override = _PROP_FIELD_IS_REQUIRED_OVERRIDES.get(self._class, {}).get(field_name, None)
         if override is not None:
             return override
@@ -302,6 +487,7 @@ class AGModelSchemaGenerator(HasToDictMixinSchemaGenerator):
                 # Remove this cast once django-stubs fixes:
                 # https://github.com/typeddjango/django-stubs/issues/447
                 not cast('RelatedField[object, object]', field).many_to_many
+                and not cast('RelatedField[object, object]', field).is_relation
                 and not field.blank
                 and field.default == fields.NOT_PROVIDED
             )
@@ -316,17 +502,17 @@ class DictSerializableSchemaGenerator(HasToDictMixinSchemaGenerator):
         self._class = class_
 
     def generate(self) -> SchemaObject:
+        properties = dict[str, OrRef[SchemaObject]]()
+        for name in self._field_names():
+            schema = _get_py_type_schema(self._class.get_field_type(name))
+            if is_not_ref(schema):
+                schema['description'] = self._class.get_field_descriptions().get(name, '')
+            properties[name] = schema
+
         return {
             'type': 'object',
-            'properties': {
-
-                name: {
-                    'description': self._class.get_field_descriptions().get(name, ''),
-                    # See if type checking works with dict union in Python 3.9
-                    **_get_py_type_schema(self._class.get_field_type(name))
-                }
-                for name in self._field_names()
-            }
+            'properties': properties,
+            'required': self._get_required_field_names()
         }
 
 
@@ -354,6 +540,7 @@ class UserSchemaGenerator(APIClassSchemaGenerator):
                 assert '$ref' not in prop
                 cast(SchemaObject, prop)['format'] = 'email'
 
+        result['required'] = list(self._fields)
         return result
 
     def _field_names(self) -> Sequence[str]:
@@ -389,7 +576,6 @@ def _get_field_schema(
     field: FieldType,
     api_class: APIClassType,
     name: str,
-    include_readonly: bool = False
 ) -> SchemaObject:
     return {'type': 'unknown'}
 
@@ -400,20 +586,12 @@ def _django_field(
     field: Field[object, object],
     api_class: Type[AutograderModel],
     name: str,
-    include_readonly: bool = False
 ) -> SchemaObject:
-    read_only = False
-    if issubclass(api_class, AutograderModel) and name not in api_class.get_editable_fields():
-        read_only = True
-
     result: SchemaObject = {
         # str() is used to force processing of django lazy eval
         'description': str(field.help_text).strip() if hasattr(field, 'help_text') else '',
         'nullable': field.null,
     }
-
-    if include_readonly:
-        result['readOnly'] = read_only
 
     # In Django 2, choices is an empty list by default. In Django 3,
     # choices is None by default.
@@ -427,7 +605,6 @@ def _django_field(
     if isinstance(field, pg_fields.ArrayField):
         result.update({
             'type': 'array',
-            # We want include_readonly to be False for recursive calls.
             'items': _get_field_schema(field.base_field, api_class, name),
         })
         return result
@@ -499,16 +676,13 @@ def _property(
     prop: property,
     api_class: APIClassType,
     name: str,
-    include_readonly: bool = False
 ) -> SchemaObject:
     if name == 'pk':
-        return _PK_SCHEMA_READ_ONLY if include_readonly else _PK_SCHEMA
+        return _PK_SCHEMA
 
     result: SchemaObject = {
         'description': _get_prop_description(prop),
     }
-    if include_readonly:
-        result['readOnly'] = True
     result.update(
         assert_not_ref(
             _get_py_type_schema(get_type_hints(prop.fget).get('return', Any))
@@ -523,16 +697,13 @@ def _cached_property(
     prop: 'cached_property[object]',
     api_class: APIClassType,
     name: str,
-    include_readonly: bool = False
 ) -> SchemaObject:
     if name == 'pk':
-        return _PK_SCHEMA_READ_ONLY if include_readonly else _PK_SCHEMA
+        return _PK_SCHEMA
 
     result: SchemaObject = {
         'description': _get_prop_description(prop),
     }
-    if include_readonly:
-        result['readOnly'] = True
     result.update(
         assert_not_ref(
             _get_py_type_schema(get_type_hints(prop.func).get('return', Any))
@@ -551,30 +722,122 @@ def _get_prop_description(prop: Union[property, cached_property[object]]) -> str
 
 
 _PROP_FIELD_OVERRIDES: Dict[APIClassType, Dict[str, SchemaObject]] = {
-    ag_models.Group: {
-        'member_names': {
-            'readOnly': False,
-        }
-    }
 }
 
 _PROP_FIELD_IS_REQUIRED_OVERRIDES: Dict[APIClassType, Dict[str, bool]] = {
     ag_models.Group: {
         'member_names': True
+    },
+    ag_models.Project: {
+        'closing_time': False
     }
+}
+
+_CREATE_BODY_OVERRIDES: Dict[APIClassType, SchemaObject | None] = {
+    ag_models.InstructorFile: {
+        'type': 'object',
+        'properties': {
+            'file_obj': {
+                'type': 'string',
+                'format': 'binary',
+                'description': 'The form-encoded file.'
+            }
+        }
+    },
+
+    ag_models.Group: {
+        'type': 'object',
+        'properties': {
+            'member_names': {
+                'type': 'array',
+                'items': {
+                    'type': 'string',
+                    'format': 'username',
+                }
+            }
+        },
+        'required': [
+            'member_names',
+        ]
+    },
+
+    ag_models.GroupInvitation: {
+        'type': 'object',
+        'properties': {
+            'recipients': {
+                'type': 'array',
+                'items': {
+                    'type': 'string',
+                    'format': 'username',
+                }
+            }
+        },
+        'required': [
+            'recipients',
+        ]
+    },
+
+    ag_models.Submission: {
+        'type': 'object',
+        'properties': {
+            'submitted_files': {
+                'type': 'array',
+                'items': {
+                    'type': 'string',
+                    'format': 'binary',
+                },
+                'description': 'A list of form-encoded files to submit.'
+            }
+        },
+        'required': [
+            'submitted_files',
+        ]
+    },
+
+    ag_models.BuildSandboxDockerImageTask: {
+        'type': 'object',
+        'properties': {
+            'files': {
+                'description': (
+                    'The form-encoded files. One file must be named "Dockerfile"'),
+                'type': 'array',
+                'items': {
+                    'type': 'string',
+                    'format': 'binary',
+                },
+            }
+        }
+    },
+
+    # FIXME: applied annotation (request body and create model)
+    ag_models.DownloadTask: None,
+}
+
+# FIXME: required fields on result fdbk objects
+
+_UPDATE_BODY_OVERRIDES: Dict[APIClassType, SchemaObject | None] = {
+    ag_models.InstructorFile: {
+        'type': 'object',
+        'properties': {
+            'file_obj': {
+                'type': 'string',
+                'format': 'binary',
+                'description': 'The form-encoded file.'
+            }
+        }
+    },
+
+    ag_models.DownloadTask: None,
 }
 
 
 _PK_SCHEMA: SchemaObject = {
     'type': 'integer',
-    'format': 'id',
 }
 
 
 _PK_SCHEMA_READ_ONLY: SchemaObject = {
     'type': 'integer',
-    'format': 'id',
-    'readOnly': True,
 }
 
 
@@ -611,7 +874,7 @@ def _get_py_type_schema(type_: type) -> OrRef[SchemaObject]:
     # assert not isinstance(type_, ForwardRef), f'ForwardRef detected: {ForwardRef}'
 
     if type_ in _PY_ATTR_TYPES:
-        return _PY_ATTR_TYPES[type_]
+        return copy.deepcopy(_PY_ATTR_TYPES[type_])
 
     if issubclass(type_, Enum):
         return {'allOf': [as_schema_ref(type_)]}
@@ -631,6 +894,27 @@ _PY_ATTR_TYPES: Dict[type, SchemaObject] = {
 
 def as_schema_ref(type_: APIClassType) -> ReferenceObject:
     return {'$ref': f'#/components/schemas/{_API_OBJ_TYPE_NAMES[type_]}'}
+
+
+def as_create_schema_ref(type_: APIClassType) -> ReferenceObject:
+    return {'$ref': f'#/components/schemas/{_API_CREATE_OBJ_TYPE_NAMES[type_]}'}
+
+
+def as_update_schema_ref(type_: APIClassType) -> ReferenceObject:
+    return {'$ref': f'#/components/schemas/{_API_UPDATE_OBJ_TYPE_NAMES[type_]}'}
+
+
+# Once TypeIs is added to typing_extensions and mypy, we can replace
+# this and assert_not_ref below with TypeIs.
+_MaybeRefType = TypeVar('_MaybeRefType', bound=Mapping[str, object])
+
+
+def is_ref(obj: OrRef[_MaybeRefType]) -> TypeGuard[_MaybeRefType]:
+    return '$ref' in obj
+
+
+def is_not_ref(obj: OrRef[_MaybeRefType]) -> TypeGuard[_MaybeRefType]:
+    return '$ref' not in obj
 
 
 _NonRefType = TypeVar('_NonRefType', bound=Mapping[str, object])

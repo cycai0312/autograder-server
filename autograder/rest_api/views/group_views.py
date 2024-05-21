@@ -13,6 +13,7 @@ from rest_framework import decorators, mixins, permissions, response, status
 
 import autograder.core.models as ag_models
 import autograder.core.utils as core_ut
+from autograder.rest_api.schema.view_schema_generators import AGPatchViewSchemaMixin
 import autograder.utils.testing as test_ut
 from autograder import utils
 from autograder.core.models.get_ultimate_submissions import get_ultimate_submission
@@ -183,22 +184,12 @@ class _UltimateSubmissionPermissions(permissions.BasePermission):
                 and not project.hide_ultimate_submission_fdbk)
 
 
-class _GroupDetailSchema(AGRetrieveViewSchemaMixin, CustomViewSchema):
+class _GroupDetailSchema(AGRetrieveViewSchemaMixin, AGPatchViewSchemaMixin, CustomViewSchema):
     pass
 
 
 class GroupDetailView(AGModelDetailView):
     schema = _GroupDetailSchema([APITags.groups], {
-        'PATCH': {
-            'operation_id': 'updateGroup',
-            'request': _MEMBER_NAMES_REQUEST_BODY,
-            'responses': {
-                '200': {
-                    'content': as_content_obj(ag_models.Group),
-                    'description': ''
-                }
-            }
-        },
         'DELETE': {'operation_id': 'pseudoDeleteGroup'}
     })
 

@@ -105,10 +105,10 @@ class MutationTestSuiteHintConfigTestCase(UnitTestBase):
         with self.assertRaises(ValidationError) as cm:
             MutationTestSuiteHintConfig.objects.validate_and_create(
                 mutation_test_suite=self.mutation_test_suite,
-                submission_limit_reset_timezone='nope'
+                hint_limit_reset_timezone='nope'
             )
 
-        self.assertIn('submission_limit_reset_timezone', cm.exception.message_dict)
+        self.assertIn('hint_limit_reset_timezone', cm.exception.message_dict)
 
     def test_serialization(self) -> None:
         config = MutationTestSuiteHintConfig.objects.validate_and_create(

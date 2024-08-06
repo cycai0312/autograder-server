@@ -585,7 +585,7 @@ class AGTestSuiteResultFeedback(ToDictMixin):
         return self._fdbk.to_dict()
 
     @property
-    def student_description(self) -> str | None:
+    def student_description(self) -> Optional[str]:
         return (
             self._ag_test_suite.student_description
             if self.fdbk_conf.show_student_description else None
@@ -808,7 +808,7 @@ class AGTestCaseResultFeedback(ToDictMixin):
         return self._fdbk.to_dict()
 
     @property
-    def student_description(self) -> str | None:
+    def student_description(self) -> Optional[str]:
         return (
             self._ag_test_case.student_description
             if self.fdbk_conf.show_student_description else None
@@ -936,13 +936,13 @@ class AGTestCommandResultFeedback(ToDictMixin):
         return self.fdbk_conf.to_dict()
 
     @property
-    def student_description(self) -> str | None:
+    def student_description(self) -> Optional[str]:
         return (
             self._cmd.student_description if self.fdbk_conf.show_student_description else None
         )
 
     @property
-    def student_on_fail_description(self) -> str | None:
+    def student_on_fail_description(self) -> Optional[str]:
         if not self.fdbk_conf.show_student_description:
             return None
 

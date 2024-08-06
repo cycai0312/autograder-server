@@ -7381,6 +7381,10 @@ components:
         fdbk_settings:
           description: ''
           type: object
+        student_description:
+          description: ''
+          nullable: true
+          type: string
         total_points:
           description: ''
           type: integer
@@ -7409,6 +7413,7 @@ components:
       - ag_test_suite_name
       - ag_test_suite_pk
       - fdbk_settings
+      - student_description
       - total_points
       - total_points_possible
       - setup_name
@@ -7429,6 +7434,10 @@ components:
         fdbk_settings:
           description: ''
           type: object
+        student_description:
+          description: ''
+          nullable: true
+          type: string
         total_points:
           description: ''
           type: integer
@@ -7445,6 +7454,7 @@ components:
       - ag_test_case_name
       - ag_test_case_pk
       - fdbk_settings
+      - student_description
       - total_points
       - total_points_possible
       - ag_test_command_results
@@ -7462,6 +7472,14 @@ components:
         fdbk_settings:
           description: ''
           type: object
+        student_description:
+          description: ''
+          nullable: true
+          type: string
+        student_on_fail_description:
+          description: ''
+          nullable: true
+          type: string
         timed_out:
           description: ''
           nullable: true
@@ -7516,6 +7534,8 @@ components:
       - ag_test_command_pk
       - ag_test_command_name
       - fdbk_settings
+      - student_description
+      - student_on_fail_description
       - timed_out
       - return_code_correct
       - expected_return_code

@@ -6039,6 +6039,14 @@ components:
           nullable: false
           type: string
           format: date-time
+        staff_description:
+          description: Text description shown only to staff. Rendered as markdown.
+          nullable: false
+          type: string
+        student_description:
+          description: Text description shown to students. Rendered as markdown.
+          nullable: false
+          type: string
         instructor_files_needed:
           description: "The project files that will be copied into the sandbox before\
             \ the suite's\n                     tests are run."
@@ -6127,6 +6135,8 @@ components:
       - name
       - project
       - last_modified
+      - staff_description
+      - student_description
       - instructor_files_needed
       - read_only_instructor_files
       - student_files_needed
@@ -6149,6 +6159,14 @@ components:
             \   Must be non-empty and non-null.\n                     Must be unique\
             \ among suites that belong to the same project.\n                    \
             \ This field is REQUIRED."
+          nullable: false
+          type: string
+        staff_description:
+          description: Text description shown only to staff. Rendered as markdown.
+          nullable: false
+          type: string
+        student_description:
+          description: Text description shown to students. Rendered as markdown.
           nullable: false
           type: string
         instructor_files_needed:
@@ -6238,6 +6256,14 @@ components:
             \   Must be non-empty and non-null.\n                     Must be unique\
             \ among suites that belong to the same project.\n                    \
             \ This field is REQUIRED."
+          nullable: false
+          type: string
+        staff_description:
+          description: Text description shown only to staff. Rendered as markdown.
+          nullable: false
+          type: string
+        student_description:
+          description: Text description shown to students. Rendered as markdown.
           nullable: false
           type: string
         instructor_files_needed:
@@ -6339,6 +6365,9 @@ components:
         show_setup_stderr:
           type: boolean
           description: Whether to show stderr content from a suite's setup command.
+        show_student_description:
+          type: boolean
+          description: Whether to show the student-facing test suite description.
       required:
       - visible
       - show_individual_tests
@@ -6346,6 +6375,7 @@ components:
       - show_setup_timed_out
       - show_setup_stdout
       - show_setup_stderr
+      - show_student_description
     AGTestCase:
       type: object
       properties:
@@ -6363,6 +6393,14 @@ components:
           nullable: false
           type: string
           format: date-time
+        staff_description:
+          description: Text description shown only to staff. Rendered as markdown.
+          nullable: false
+          type: string
+        student_description:
+          description: Text description shown to students. Rendered as markdown.
+          nullable: false
+          type: string
         ag_test_suite:
           description: "The suite this autograder test belongs to.\n             \
             \        This field is REQUIRED."
@@ -6398,6 +6436,8 @@ components:
       - pk
       - name
       - last_modified
+      - staff_description
+      - student_description
       - ag_test_suite
       - ag_test_commands
       - normal_fdbk_config
@@ -6419,6 +6459,14 @@ components:
             \        This field is REQUIRED."
           nullable: false
           type: integer
+        staff_description:
+          description: Text description shown only to staff. Rendered as markdown.
+          nullable: false
+          type: string
+        student_description:
+          description: Text description shown to students. Rendered as markdown.
+          nullable: false
+          type: string
         normal_fdbk_config:
           description: ''
           nullable: false
@@ -6456,6 +6504,14 @@ components:
             \        This field is REQUIRED."
           nullable: false
           type: integer
+        staff_description:
+          description: Text description shown only to staff. Rendered as markdown.
+          nullable: false
+          type: string
+        student_description:
+          description: Text description shown to students. Rendered as markdown.
+          nullable: false
+          type: string
         normal_fdbk_config:
           description: ''
           nullable: false
@@ -6485,9 +6541,13 @@ components:
         show_individual_commands:
           type: boolean
           description: ''
+        show_student_description:
+          type: boolean
+          description: ''
       required:
       - visible
       - show_individual_commands
+      - show_student_description
     AGTestCommand:
       type: object
       properties:
@@ -6516,6 +6576,19 @@ components:
             \   Note: This string defaults to the \"true\" command\n             \
             \        (which does nothing and returns 0) so that AGCommands are\n \
             \                    default-creatable."
+          nullable: false
+          type: string
+        staff_description:
+          description: Text description shown only to staff. Rendered as markdown.
+          nullable: false
+          type: string
+        student_description:
+          description: Text description shown to students. Rendered as markdown.
+          nullable: false
+          type: string
+        student_on_fail_description:
+          description: Additional text shown to students failing this test. Rendered
+            as markdown.
           nullable: false
           type: string
         stdin_source:
@@ -6715,6 +6788,9 @@ components:
       - ag_test_case
       - last_modified
       - cmd
+      - staff_description
+      - student_description
+      - student_on_fail_description
       - stdin_source
       - stdin_text
       - stdin_instructor_file
@@ -6761,6 +6837,19 @@ components:
             \   Note: This string defaults to the \"true\" command\n             \
             \        (which does nothing and returns 0) so that AGCommands are\n \
             \                    default-creatable."
+          nullable: false
+          type: string
+        staff_description:
+          description: Text description shown only to staff. Rendered as markdown.
+          nullable: false
+          type: string
+        student_description:
+          description: Text description shown to students. Rendered as markdown.
+          nullable: false
+          type: string
+        student_on_fail_description:
+          description: Additional text shown to students failing this test. Rendered
+            as markdown.
           nullable: false
           type: string
         stdin_source:
@@ -6974,6 +7063,19 @@ components:
             \   Note: This string defaults to the \"true\" command\n             \
             \        (which does nothing and returns 0) so that AGCommands are\n \
             \                    default-creatable."
+          nullable: false
+          type: string
+        staff_description:
+          description: Text description shown only to staff. Rendered as markdown.
+          nullable: false
+          type: string
+        student_description:
+          description: Text description shown to students. Rendered as markdown.
+          nullable: false
+          type: string
+        student_on_fail_description:
+          description: Additional text shown to students failing this test. Rendered
+            as markdown.
           nullable: false
           type: string
         stdin_source:
@@ -7194,6 +7296,9 @@ components:
         show_whether_timed_out:
           type: boolean
           description: ''
+        show_student_description:
+          type: boolean
+          description: ''
       required:
       - visible
       - return_code_fdbk_level
@@ -7204,6 +7309,7 @@ components:
       - show_actual_stdout
       - show_actual_stderr
       - show_whether_timed_out
+      - show_student_description
     StdinSource:
       type: string
       enum:

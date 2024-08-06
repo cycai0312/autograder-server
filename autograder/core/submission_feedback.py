@@ -585,6 +585,13 @@ class AGTestSuiteResultFeedback(ToDictMixin):
         return self._fdbk.to_dict()
 
     @property
+    def student_description(self) -> str | None:
+        return (
+            self._ag_test_suite.student_description
+            if self.fdbk_conf.show_student_description else None
+        )
+
+    @property
     def setup_name(self) -> Optional[str]:
         if not self._show_setup_name:
             return None
@@ -721,6 +728,7 @@ class AGTestSuiteResultFeedback(ToDictMixin):
         'ag_test_suite_name',
         'ag_test_suite_pk',
         'fdbk_settings',
+        'student_description',
         'total_points',
         'total_points_possible',
         'setup_name',
@@ -800,6 +808,13 @@ class AGTestCaseResultFeedback(ToDictMixin):
         return self._fdbk.to_dict()
 
     @property
+    def student_description(self) -> str | None:
+        return (
+            self._ag_test_case.student_description
+            if self.fdbk_conf.show_student_description else None
+        )
+
+    @property
     def total_points(self) -> int:
         points = sum((cmd_res.total_points for cmd_res in self._visible_cmd_results))
         return max(0, points)
@@ -837,6 +852,7 @@ class AGTestCaseResultFeedback(ToDictMixin):
         'ag_test_case_name',
         'ag_test_case_pk',
         'fdbk_settings',
+        'student_description',
         'total_points',
         'total_points_possible',
 
@@ -918,6 +934,28 @@ class AGTestCommandResultFeedback(ToDictMixin):
     @property
     def fdbk_settings(self) -> Dict[str, object]:
         return self.fdbk_conf.to_dict()
+
+    @property
+    def student_description(self) -> str | None:
+        return (
+            self._cmd.student_description if self.fdbk_conf.show_student_description else None
+        )
+
+    @property
+    def student_on_fail_description(self) -> str | None:
+        if not self.fdbk_conf.show_student_description:
+            return None
+
+        if self.return_code_correct is not None and not self.return_code_correct:
+            return self._cmd.student_on_fail_description
+
+        if self.stdout_correct is not None and not self.stdout_correct:
+            return self._cmd.student_on_fail_description
+
+        if self.stderr_correct is not None and not self.stderr_correct:
+            return self._cmd.student_on_fail_description
+
+        return None
 
     @property
     def timed_out(self) -> Optional[bool]:
@@ -1172,6 +1210,8 @@ class AGTestCommandResultFeedback(ToDictMixin):
         'ag_test_command_pk',
         'ag_test_command_name',
         'fdbk_settings',
+        'student_description',
+        'student_on_fail_description',
 
         'timed_out',
 

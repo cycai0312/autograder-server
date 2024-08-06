@@ -424,6 +424,10 @@ class AGTestCommand(AutograderModel):
         'last_modified',
         'cmd',
 
+        'staff_description',
+        'student_description',
+        'student_on_fail_description',
+
         'stdin_source',
         'stdin_text',
         'stdin_instructor_file',
@@ -467,6 +471,10 @@ class AGTestCommand(AutograderModel):
         'name',
 
         'cmd',
+
+        'staff_description',
+        'student_description',
+        'student_on_fail_description',
 
         'stdin_source',
         'stdin_text',

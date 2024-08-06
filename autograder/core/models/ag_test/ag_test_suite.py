@@ -255,6 +255,9 @@ class AGTestSuite(AutograderModel):
         'project',
         'last_modified',
 
+        'staff_description',
+        'student_description',
+
         'instructor_files_needed',
         'read_only_instructor_files',
         'student_files_needed',
@@ -287,6 +290,9 @@ class AGTestSuite(AutograderModel):
     EDITABLE_FIELDS = (
         'name',
 
+        'staff_description',
+        'student_description',
+
         'instructor_files_needed',
         'read_only_instructor_files',
         'student_files_needed',
@@ -302,5 +308,5 @@ class AGTestSuite(AutograderModel):
         'normal_fdbk_config',
         'ultimate_submission_fdbk_config',
         'past_limit_submission_fdbk_config',
-        'staff_viewer_fdbk_config'
+        'staff_viewer_fdbk_config',
     )

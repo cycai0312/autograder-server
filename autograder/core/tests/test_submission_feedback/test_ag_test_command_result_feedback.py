@@ -826,6 +826,212 @@ class AGTestCommandResultFeedbackTestCase(UnitTestBase):
             'ignore_blank_lines': options_value
         }
 
+    def test_student_description_visible(self) -> None:
+        description = 'description WAAAAAA'
+        self.ag_test_command.validate_and_update(
+            student_description=description,
+            normal_fdbk_config={
+                'show_student_description': True,
+            }
+        )
+        result = self.make_correct_result()
+        fdbk = get_cmd_fdbk(result, ag_models.FeedbackCategory.normal)
+
+        self.assertEqual(description, fdbk.student_description)
+
+    def test_student_description_hidden(self) -> None:
+        description = 'description WAAAAAA'
+        self.ag_test_command.validate_and_update(
+            student_description=description,
+            normal_fdbk_config={
+                'show_student_description': False,
+            }
+        )
+        result = self.make_correct_result()
+        fdbk = get_cmd_fdbk(result, ag_models.FeedbackCategory.normal)
+
+        self.assertIsNone(fdbk.student_description)
+
+    def test_student_on_fail_description_shown_on_fail(self) -> None:
+        description = 'description WAAAAAA'
+        on_fail_description = 'WAAAA fail'
+
+        self._do_student_on_fail_description_test(
+            show_student_description=True,
+            description=description,
+            on_fail_description=on_fail_description,
+            expected_description=description,
+            expected_on_fail_description=on_fail_description,
+            return_code_correct=False,
+            stdout_correct=None,
+            stderr_correct=None,
+        )
+        self._do_student_on_fail_description_test(
+            show_student_description=True,
+            description=description,
+            on_fail_description=on_fail_description,
+            expected_description=description,
+            expected_on_fail_description=on_fail_description,
+            return_code_correct=False,
+            stdout_correct=True,
+            stderr_correct=None,
+        )
+        self._do_student_on_fail_description_test(
+            show_student_description=True,
+            description=description,
+            on_fail_description=on_fail_description,
+            expected_description=description,
+            expected_on_fail_description=on_fail_description,
+            return_code_correct=False,
+            stdout_correct=None,
+            stderr_correct=True,
+        )
+
+        self._do_student_on_fail_description_test(
+            show_student_description=True,
+            description=description,
+            on_fail_description=on_fail_description,
+            expected_description=description,
+            expected_on_fail_description=on_fail_description,
+            return_code_correct=None,
+            stdout_correct=False,
+            stderr_correct=None,
+        )
+        self._do_student_on_fail_description_test(
+            show_student_description=True,
+            description=description,
+            on_fail_description=on_fail_description,
+            expected_description=description,
+            expected_on_fail_description=on_fail_description,
+            return_code_correct=True,
+            stdout_correct=False,
+            stderr_correct=None,
+        )
+        self._do_student_on_fail_description_test(
+            show_student_description=True,
+            description=description,
+            on_fail_description=on_fail_description,
+            expected_description=description,
+            expected_on_fail_description=on_fail_description,
+            return_code_correct=None,
+            stdout_correct=False,
+            stderr_correct=True,
+        )
+
+        self._do_student_on_fail_description_test(
+            show_student_description=True,
+            description=description,
+            on_fail_description=on_fail_description,
+            expected_description=description,
+            expected_on_fail_description=on_fail_description,
+            return_code_correct=None,
+            stdout_correct=None,
+            stderr_correct=False,
+        )
+        self._do_student_on_fail_description_test(
+            show_student_description=True,
+            description=description,
+            on_fail_description=on_fail_description,
+            expected_description=description,
+            expected_on_fail_description=on_fail_description,
+            return_code_correct=True,
+            stdout_correct=None,
+            stderr_correct=False,
+        )
+        self._do_student_on_fail_description_test(
+            show_student_description=True,
+            description=description,
+            on_fail_description=on_fail_description,
+            expected_description=description,
+            expected_on_fail_description=on_fail_description,
+            return_code_correct=None,
+            stdout_correct=True,
+            stderr_correct=False,
+        )
+
+    def test_student_on_fail_description_not_shown_on_pass(self) -> None:
+        description = 'description WAAAAAA'
+        on_fail_description = 'WAAAA fail'
+
+        self._do_student_on_fail_description_test(
+            show_student_description=True,
+            description=description,
+            on_fail_description=on_fail_description,
+            expected_description=description,
+            expected_on_fail_description=None,
+            return_code_correct=True,
+            stdout_correct=None,
+            stderr_correct=None,
+        )
+
+        self._do_student_on_fail_description_test(
+            show_student_description=True,
+            description=description,
+            on_fail_description=on_fail_description,
+            expected_description=description,
+            expected_on_fail_description=None,
+            return_code_correct=None,
+            stdout_correct=True,
+            stderr_correct=None,
+        )
+
+        self._do_student_on_fail_description_test(
+            show_student_description=True,
+            description=description,
+            on_fail_description=on_fail_description,
+            expected_description=description,
+            expected_on_fail_description=None,
+            return_code_correct=None,
+            stdout_correct=None,
+            stderr_correct=True,
+        )
+
+    def test_student_on_fail_description_hidden(self) -> None:
+        description = 'description WAAAAAA'
+        on_fail_description = 'WAAAA fail'
+
+        self._do_student_on_fail_description_test(
+            show_student_description=False,
+            description=description,
+            on_fail_description=on_fail_description,
+            expected_description=None,
+            expected_on_fail_description=None,
+            return_code_correct=None,
+            stdout_correct=False,
+            stderr_correct=None,
+        )
+
+    def _do_student_on_fail_description_test(
+        self,
+        show_student_description: bool,
+        description: str,
+        on_fail_description: str,
+        expected_description: str | None,
+        expected_on_fail_description: str | None,
+        return_code_correct: bool | None,
+        stdout_correct: bool | None,
+        stderr_correct: bool | None,
+    ) -> None:
+        self.ag_test_command.validate_and_update(
+            student_description=description,
+            student_on_fail_description=on_fail_description,
+            normal_fdbk_config={
+                'show_student_description': show_student_description,
+            }
+        )
+        result = self.make_incorrect_result()
+        try:
+            result.return_code_correct = return_code_correct
+            result.stdout_correct = stdout_correct
+            result.stderr_correct = stderr_correct
+            fdbk = get_cmd_fdbk(result, ag_models.FeedbackCategory.normal)
+
+            self.assertEqual(expected_description, fdbk.student_description)
+            self.assertEqual(expected_on_fail_description, fdbk.student_on_fail_description)
+        finally:
+            # So that we can call this multiple times in one test
+            result.delete()
+
     def test_fdbk_to_dict(self):
         result = obj_build.make_correct_ag_test_command_result(
             ag_test_command=self.ag_test_command,
@@ -836,6 +1042,8 @@ class AGTestCommandResultFeedbackTestCase(UnitTestBase):
             'ag_test_command_name',
             'ag_test_command_pk',
             'fdbk_settings',
+            'student_description',
+            'student_on_fail_description',
 
             'timed_out',
 

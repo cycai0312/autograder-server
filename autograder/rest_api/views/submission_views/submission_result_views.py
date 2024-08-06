@@ -212,52 +212,6 @@ def _get_setup_output(
     return serve_file(path)
 
 
-class AGTestSuiteDescriptionsView(SubmissionResultsViewBase):
-    schema = CustomViewSchema([APITags.submissions], {
-        'GET': {
-            'operation_id': 'getAGTestSuiteResultDescriptions',
-            'parameters': [{'$ref': '#/components/parameters/feedbackCategory'}],
-            'responses': {
-                '200': {
-                    'description': '',
-                    'content': {
-                        'application/json': {
-                            'schema': {
-                                'type': 'object',
-                                'required': [
-                                    'staff_description',
-                                    'student_description',
-                                ],
-                                'properties': {
-                                    'staff_description': {
-                                        'type': 'string',
-                                        'nullable': True,
-                                    },
-                                    'student_description': {
-                                        'type': 'string',
-                                        'nullable': True,
-                                    },
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    })
-
-    def _make_response(self, submission_fdbk: SubmissionResultFeedback,
-                       fdbk_category: ag_models.FeedbackCategory) -> HttpResponse:
-        suite_result_pk = self.kwargs['result_pk']
-        suite_fdbk = _find_ag_suite_result(submission_fdbk, suite_result_pk)
-        if suite_fdbk is None:
-            return response.Response(None)
-        return response.Response({
-            # 'staff_description':, FIXME
-            # 'student_description':,
-        })
-
-
 def _find_ag_suite_result(submission_fdbk: SubmissionResultFeedback,
                           suite_result_pk: int) -> Optional[AGTestSuiteResultFeedback]:
     """

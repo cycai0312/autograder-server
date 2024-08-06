@@ -109,7 +109,7 @@ class AGTestCommandMiscTestCase(UnitTestBase):
         self.assertFalse(ag_cmd.ultimate_submission_fdbk_config.show_actual_stdout)
         self.assertFalse(ag_cmd.ultimate_submission_fdbk_config.show_actual_stderr)
         self.assertTrue(ag_cmd.ultimate_submission_fdbk_config.show_whether_timed_out)
-        self.assertTrue(ag_cmd.normal_fdbk_config.show_student_description)
+        self.assertTrue(ag_cmd.ultimate_submission_fdbk_config.show_student_description)
 
     def test_past_limit_fdbk_default(self):
         ag_cmd = ag_models.AGTestCommand.objects.validate_and_create(
@@ -127,7 +127,7 @@ class AGTestCommandMiscTestCase(UnitTestBase):
         self.assertFalse(ag_cmd.past_limit_submission_fdbk_config.show_actual_stdout)
         self.assertFalse(ag_cmd.past_limit_submission_fdbk_config.show_actual_stderr)
         self.assertFalse(ag_cmd.past_limit_submission_fdbk_config.show_whether_timed_out)
-        self.assertFalse(ag_cmd.normal_fdbk_config.show_student_description)
+        self.assertFalse(ag_cmd.past_limit_submission_fdbk_config.show_student_description)
 
     def test_staff_viewer_fdbk_default(self):
         ag_cmd = ag_models.AGTestCommand.objects.validate_and_create(
@@ -145,7 +145,7 @@ class AGTestCommandMiscTestCase(UnitTestBase):
         self.assertTrue(ag_cmd.staff_viewer_fdbk_config.show_actual_stdout)
         self.assertTrue(ag_cmd.staff_viewer_fdbk_config.show_actual_stderr)
         self.assertTrue(ag_cmd.staff_viewer_fdbk_config.show_whether_timed_out)
-        self.assertTrue(ag_cmd.normal_fdbk_config.show_student_description)
+        self.assertTrue(ag_cmd.staff_viewer_fdbk_config.show_student_description)
 
     def test_some_valid_non_defaults(self):
         points_for_correct_return_code = 1
@@ -504,6 +504,10 @@ class AGTestCommandMiscTestCase(UnitTestBase):
             'ag_test_case',
             'last_modified',
             'cmd',
+
+            'staff_description',
+            'student_description',
+            'student_on_fail_description',
 
             'stdin_source',
             'stdin_text',

@@ -180,6 +180,8 @@ class AGTestCaseTestCase(UnitTestBase):
             'pk',
             'name',
             'last_modified',
+            'staff_description',
+            'student_description',
             'ag_test_suite',
             'ag_test_commands',
             'normal_fdbk_config',

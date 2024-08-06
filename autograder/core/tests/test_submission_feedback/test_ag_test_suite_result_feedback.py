@@ -275,6 +275,28 @@ class AGTestSuiteFeedbackTestCase(UnitTestBase):
         self.assertEqual(expected_points, fdbk.total_points)
         self.assertEqual(expected_points, fdbk.total_points_possible)
 
+    def test_student_description_visible(self) -> None:
+        description = 'al;skdfja;slkfj description'
+        self.ag_test_suite.validate_and_update(
+            student_description=description,
+            normal_fdbk_config={
+                'show_student_description': True,
+            }
+        )
+        fdbk = get_suite_fdbk(self.ag_test_suite_result, ag_models.FeedbackCategory.normal)
+        self.assertEqual(description, fdbk.student_description)
+
+    def test_student_description_hidden(self) -> None:
+        description = 'al;skdfja;slkfj description'
+        self.ag_test_suite.validate_and_update(
+            student_description=description,
+            normal_fdbk_config={
+                'show_student_description': False,
+            }
+        )
+        fdbk = get_suite_fdbk(self.ag_test_suite_result, ag_models.FeedbackCategory.normal)
+        self.assertIsNone(fdbk.student_description)
+
     def test_fdbk_to_dict(self):
         self.ag_test_case1.validate_and_update(
             normal_fdbk_config={'show_individual_commands': False})
@@ -284,6 +306,7 @@ class AGTestSuiteFeedbackTestCase(UnitTestBase):
             'ag_test_suite_name',
             'ag_test_suite_pk',
             'fdbk_settings',
+            'student_description',
             'setup_name',
             'setup_return_code',
             'setup_timed_out',

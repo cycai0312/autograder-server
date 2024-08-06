@@ -30,7 +30,7 @@ class SubmissionResultsViewBase(AGModelAPIView):
         ag_permissions.is_staff_or_group_member(),
         ag_permissions.can_request_feedback_category()
     ]
-    model_manager = ag_models.Submission.objects.select_related('project')
+    model_manager = ag_models.Submission.objects.select_related('group__project__course')
 
     @method_decorator(require_query_params(FDBK_CATEGORY_PARAM))
     def get(self, *args: Any, **kwargs: Any) -> HttpResponse:

@@ -483,12 +483,12 @@ class SubmissionResultFeedback(ToDictMixin):
                 if fdbk.fdbk_conf.visible:
                     visible.append(fdbk)
             except KeyError:
-                # In certain rare cases, possibly caused by race condition when
-                # deleting a suite/test/command at just the right time, a
+                # In certain rare cases (such as deleting a suite/test/command
+                # after a submission has already been loaded), a
                 # submissions's denormalized AG test results can end up
                 # contaning the PK for a suite/test/command that no longer
-                # exists. Since this is unlikely to happen on a large scale,
-                # we'll just ignore those elements.
+                # exists. Since this will be resolved the next time the
+                # submission is loaded, we'll just ignore those elements.
                 continue
 
         visible.sort(key=lambda item: item.ag_test_suite_order)
@@ -583,6 +583,13 @@ class AGTestSuiteResultFeedback(ToDictMixin):
     @property
     def fdbk_settings(self) -> Dict[str, object]:
         return self._fdbk.to_dict()
+
+    @property
+    def student_description(self) -> Optional[str]:
+        return (
+            self._ag_test_suite.student_description
+            if self.fdbk_conf.show_student_description else None
+        )
 
     @property
     def setup_name(self) -> Optional[str]:
@@ -710,7 +717,7 @@ class AGTestSuiteResultFeedback(ToDictMixin):
 
                 if fdbk.fdbk_conf.visible:
                     visible.append(fdbk)
-            except KeyError:  # See comment in AGTestSuiteResultFeedback.ag_test_suite_results
+            except KeyError:  # See comment in SubmissionResultFeedback.ag_test_suite_results
                 continue
 
         visible.sort(key=lambda item: item.ag_test_case_order)
@@ -721,6 +728,7 @@ class AGTestSuiteResultFeedback(ToDictMixin):
         'ag_test_suite_name',
         'ag_test_suite_pk',
         'fdbk_settings',
+        'student_description',
         'total_points',
         'total_points_possible',
         'setup_name',
@@ -800,6 +808,13 @@ class AGTestCaseResultFeedback(ToDictMixin):
         return self._fdbk.to_dict()
 
     @property
+    def student_description(self) -> Optional[str]:
+        return (
+            self._ag_test_case.student_description
+            if self.fdbk_conf.show_student_description else None
+        )
+
+    @property
     def total_points(self) -> int:
         points = sum((cmd_res.total_points for cmd_res in self._visible_cmd_results))
         return max(0, points)
@@ -826,7 +841,7 @@ class AGTestCaseResultFeedback(ToDictMixin):
                 )
                 if fdbk.fdbk_conf.visible:
                     visible.append(fdbk)
-            except KeyError:  # See comment in AGTestSuiteResultFeedback.ag_test_suite_results
+            except KeyError:  # See comment in SubmissionResultFeedback.ag_test_suite_results
                 continue
 
         visible.sort(key=lambda item: item.ag_test_command_order)
@@ -837,6 +852,7 @@ class AGTestCaseResultFeedback(ToDictMixin):
         'ag_test_case_name',
         'ag_test_case_pk',
         'fdbk_settings',
+        'student_description',
         'total_points',
         'total_points_possible',
 
@@ -918,6 +934,28 @@ class AGTestCommandResultFeedback(ToDictMixin):
     @property
     def fdbk_settings(self) -> Dict[str, object]:
         return self.fdbk_conf.to_dict()
+
+    @property
+    def student_description(self) -> Optional[str]:
+        return (
+            self._cmd.student_description if self.fdbk_conf.show_student_description else None
+        )
+
+    @property
+    def student_on_fail_description(self) -> Optional[str]:
+        if not self.fdbk_conf.show_student_description:
+            return None
+
+        if self.return_code_correct is not None and not self.return_code_correct:
+            return self._cmd.student_on_fail_description
+
+        if self.stdout_correct is not None and not self.stdout_correct:
+            return self._cmd.student_on_fail_description
+
+        if self.stderr_correct is not None and not self.stderr_correct:
+            return self._cmd.student_on_fail_description
+
+        return None
 
     @property
     def timed_out(self) -> Optional[bool]:
@@ -1172,6 +1210,8 @@ class AGTestCommandResultFeedback(ToDictMixin):
         'ag_test_command_pk',
         'ag_test_command_name',
         'fdbk_settings',
+        'student_description',
+        'student_on_fail_description',
 
         'timed_out',
 

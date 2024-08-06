@@ -46,6 +46,7 @@ class AGTestSuiteTestCase(UnitTestBase):
         self.assertTrue(suite.normal_fdbk_config.show_setup_timed_out)
         self.assertTrue(suite.normal_fdbk_config.show_setup_stdout)
         self.assertTrue(suite.normal_fdbk_config.show_setup_stderr)
+        self.assertTrue(suite.normal_fdbk_config.show_student_description)
 
         self.assertTrue(suite.ultimate_submission_fdbk_config.visible)
         self.assertTrue(suite.ultimate_submission_fdbk_config.show_individual_tests)
@@ -53,6 +54,7 @@ class AGTestSuiteTestCase(UnitTestBase):
         self.assertTrue(suite.ultimate_submission_fdbk_config.show_setup_timed_out)
         self.assertTrue(suite.ultimate_submission_fdbk_config.show_setup_stdout)
         self.assertTrue(suite.ultimate_submission_fdbk_config.show_setup_stderr)
+        self.assertTrue(suite.ultimate_submission_fdbk_config.show_student_description)
 
         self.assertTrue(suite.past_limit_submission_fdbk_config.visible)
         self.assertTrue(suite.past_limit_submission_fdbk_config.show_individual_tests)
@@ -61,6 +63,7 @@ class AGTestSuiteTestCase(UnitTestBase):
         self.assertTrue(suite.past_limit_submission_fdbk_config.show_setup_timed_out)
         self.assertTrue(suite.past_limit_submission_fdbk_config.show_setup_stdout)
         self.assertTrue(suite.past_limit_submission_fdbk_config.show_setup_stderr)
+        self.assertFalse(suite.past_limit_submission_fdbk_config.show_student_description)
 
         self.assertTrue(suite.staff_viewer_fdbk_config.visible)
         self.assertTrue(suite.staff_viewer_fdbk_config.show_individual_tests)
@@ -68,6 +71,7 @@ class AGTestSuiteTestCase(UnitTestBase):
         self.assertTrue(suite.staff_viewer_fdbk_config.show_setup_timed_out)
         self.assertTrue(suite.staff_viewer_fdbk_config.show_setup_stdout)
         self.assertTrue(suite.staff_viewer_fdbk_config.show_setup_stderr)
+        self.assertTrue(suite.staff_viewer_fdbk_config.show_student_description)
 
     def test_valid_create_non_defaults(self):
         student_file = ag_models.ExpectedStudentFile.objects.validate_and_create(
@@ -103,6 +107,7 @@ class AGTestSuiteTestCase(UnitTestBase):
                 'show_setup_timed_out': False,
                 'show_setup_stdout': False,
                 'show_setup_stderr': False,
+                'show_student_description': False,
             }
         )
 
@@ -205,6 +210,9 @@ class AGTestSuiteTestCase(UnitTestBase):
             'name',
             'project',
             'last_modified',
+
+            'staff_description',
+            'student_description',
 
             'instructor_files_needed',
             'read_only_instructor_files',

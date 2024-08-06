@@ -25,13 +25,15 @@ class AGTestSuiteFeedbackConfig(DictSerializable):
                  show_setup_return_code: bool = True,
                  show_setup_timed_out: bool = True,
                  show_setup_stdout: bool = True,
-                 show_setup_stderr: bool = True):
+                 show_setup_stderr: bool = True,
+                 show_student_description: bool = True):
         self.visible = visible
         self.show_individual_tests = show_individual_tests
         self.show_setup_return_code = show_setup_return_code
         self.show_setup_timed_out = show_setup_timed_out
         self.show_setup_stdout = show_setup_stdout
         self.show_setup_stderr = show_setup_stderr
+        self.show_student_description = show_student_description
 
     SERIALIZABLE_FIELDS = [
         'visible',
@@ -40,6 +42,7 @@ class AGTestSuiteFeedbackConfig(DictSerializable):
         'show_setup_timed_out',
         'show_setup_stdout',
         'show_setup_stderr',
+        'show_student_description',
     ]
 
     FIELD_DESCRIPTIONS = {
@@ -50,7 +53,13 @@ class AGTestSuiteFeedbackConfig(DictSerializable):
             "Whether to show stdout content from a suite's setup command."),
         'show_setup_stderr': (
             "Whether to show stderr content from a suite's setup command."),
+        'show_student_description': (
+            "Whether to show the student-facing test suite description."),
     }
+
+
+def _past_limit_fdbk() -> AGTestSuiteFeedbackConfig:
+    return AGTestSuiteFeedbackConfig(show_student_description=False)
 
 
 class AGTestSuite(AutograderModel):
@@ -152,12 +161,22 @@ class AGTestSuite(AutograderModel):
                      have yet to be graded do not prevent members of a group from submitting
                      again.''')
 
+    staff_description = models.TextField(
+        blank=True,
+        help_text='Text description shown only to staff. Rendered as markdown.'
+    )
+
+    student_description = models.TextField(
+        blank=True,
+        help_text='Text description shown to students. Rendered as markdown.'
+    )
+
     normal_fdbk_config = ag_fields.ValidatedJSONField(
         AGTestSuiteFeedbackConfig, default=AGTestSuiteFeedbackConfig)
     ultimate_submission_fdbk_config = ag_fields.ValidatedJSONField(
         AGTestSuiteFeedbackConfig, default=AGTestSuiteFeedbackConfig)
     past_limit_submission_fdbk_config = ag_fields.ValidatedJSONField(
-        AGTestSuiteFeedbackConfig, default=AGTestSuiteFeedbackConfig)
+        AGTestSuiteFeedbackConfig, default=_past_limit_fdbk)
     staff_viewer_fdbk_config = ag_fields.ValidatedJSONField(
         AGTestSuiteFeedbackConfig, default=AGTestSuiteFeedbackConfig)
 
@@ -236,6 +255,9 @@ class AGTestSuite(AutograderModel):
         'project',
         'last_modified',
 
+        'staff_description',
+        'student_description',
+
         'instructor_files_needed',
         'read_only_instructor_files',
         'student_files_needed',
@@ -268,6 +290,9 @@ class AGTestSuite(AutograderModel):
     EDITABLE_FIELDS = (
         'name',
 
+        'staff_description',
+        'student_description',
+
         'instructor_files_needed',
         'read_only_instructor_files',
         'student_files_needed',
@@ -283,5 +308,5 @@ class AGTestSuite(AutograderModel):
         'normal_fdbk_config',
         'ultimate_submission_fdbk_config',
         'past_limit_submission_fdbk_config',
-        'staff_viewer_fdbk_config'
+        'staff_viewer_fdbk_config',
     )

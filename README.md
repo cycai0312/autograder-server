@@ -44,6 +44,7 @@ sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt-get update
 sudo apt-get install python3.10 python3.10-distutils python3.10-venv
 curl https://bootstrap.pypa.io/get-pip.py | sudo python3.10
+python3.10 -m pip install pip==24.0
 
 python3.10 -m venv venv
 source venv/bin/activate

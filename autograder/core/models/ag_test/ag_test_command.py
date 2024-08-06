@@ -81,7 +81,8 @@ class AGTestCommandFeedbackConfig(DictSerializable):
             show_actual_return_code=True,
             show_actual_stdout=True,
             show_actual_stderr=True,
-            show_whether_timed_out=True
+            show_whether_timed_out=True,
+            show_student_description=True,
         )
 
     SERIALIZABLE_FIELDS = (

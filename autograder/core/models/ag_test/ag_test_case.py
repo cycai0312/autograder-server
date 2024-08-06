@@ -14,11 +14,21 @@ class AGTestCaseFeedbackConfig(DictSerializable):
     """
     Contains feedback options for an AGTestCase.
     """
-    def __init__(self, visible: bool = True, show_individual_commands: bool = True):
+    def __init__(
+        self,
+        visible: bool = True,
+        show_individual_commands: bool = True,
+        show_student_description: bool = True,
+    ):
         self.visible = visible
         self.show_individual_commands = show_individual_commands
+        self.show_student_description = show_student_description
 
-    SERIALIZABLE_FIELDS = ('visible', 'show_individual_commands',)
+    SERIALIZABLE_FIELDS = ('visible', 'show_individual_commands', 'show_student_description',)
+
+
+def _past_limit_fdbk() -> AGTestCaseFeedbackConfig:
+    return AGTestCaseFeedbackConfig(show_student_description=False)
 
 
 class AGTestCase(AutograderModel):
@@ -46,12 +56,22 @@ class AGTestCase(AutograderModel):
         help_text='''The suite this autograder test belongs to.
                      This field is REQUIRED.''')
 
+    staff_description = models.TextField(
+        blank=True,
+        help_text='Text description shown only to staff. Rendered as markdown.'
+    )
+
+    student_description = models.TextField(
+        blank=True,
+        help_text='Text description shown to students. Rendered as markdown.'
+    )
+
     normal_fdbk_config = ag_fields.ValidatedJSONField(
         AGTestCaseFeedbackConfig, default=AGTestCaseFeedbackConfig)
     ultimate_submission_fdbk_config = ag_fields.ValidatedJSONField(
         AGTestCaseFeedbackConfig, default=AGTestCaseFeedbackConfig)
     past_limit_submission_fdbk_config = ag_fields.ValidatedJSONField(
-        AGTestCaseFeedbackConfig, default=AGTestCaseFeedbackConfig)
+        AGTestCaseFeedbackConfig, default=_past_limit_fdbk)
     staff_viewer_fdbk_config = ag_fields.ValidatedJSONField(
         AGTestCaseFeedbackConfig, default=AGTestCaseFeedbackConfig)
 

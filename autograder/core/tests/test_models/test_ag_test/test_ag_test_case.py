@@ -27,12 +27,19 @@ class AGTestCaseTestCase(UnitTestBase):
 
         self.assertTrue(ag_test.normal_fdbk_config.visible)
         self.assertTrue(ag_test.normal_fdbk_config.show_individual_commands)
+        self.assertTrue(ag_test.normal_fdbk_config.show_student_description)
+
         self.assertTrue(ag_test.ultimate_submission_fdbk_config.visible)
         self.assertTrue(ag_test.ultimate_submission_fdbk_config.show_individual_commands)
+        self.assertTrue(ag_test.ultimate_submission_fdbk_config.show_student_description)
+
         self.assertTrue(ag_test.past_limit_submission_fdbk_config.visible)
         self.assertTrue(ag_test.past_limit_submission_fdbk_config.show_individual_commands)
+        self.assertFalse(ag_test.past_limit_submission_fdbk_config.show_student_description)
+
         self.assertTrue(ag_test.staff_viewer_fdbk_config.visible)
         self.assertTrue(ag_test.staff_viewer_fdbk_config.show_individual_commands)
+        self.assertTrue(ag_test.staff_viewer_fdbk_config.show_student_description)
 
     def test_error_ag_test_name_not_unique(self):
         name = 'stove'

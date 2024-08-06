@@ -35,7 +35,8 @@ class AGTestCommandFeedbackConfig(DictSerializable):
                  show_actual_return_code: bool = False,
                  show_actual_stdout: bool = False,
                  show_actual_stderr: bool = False,
-                 show_whether_timed_out: bool = False):
+                 show_whether_timed_out: bool = False,
+                 show_student_description: bool = False):
         self.visible = visible
 
         self.return_code_fdbk_level = return_code_fdbk_level
@@ -50,6 +51,8 @@ class AGTestCommandFeedbackConfig(DictSerializable):
 
         self.show_whether_timed_out = show_whether_timed_out
 
+        self.show_student_description = show_student_description
+
     @classmethod
     def default_ultimate_submission_fdbk_config(cls) -> AGTestCommandFeedbackConfig:
         return AGTestCommandFeedbackConfig(
@@ -60,7 +63,8 @@ class AGTestCommandFeedbackConfig(DictSerializable):
             show_actual_return_code=True,
             show_actual_stdout=False,
             show_actual_stderr=False,
-            show_whether_timed_out=True
+            show_whether_timed_out=True,
+            show_student_description=True,
         )
 
     @classmethod
@@ -90,6 +94,7 @@ class AGTestCommandFeedbackConfig(DictSerializable):
         'show_actual_stdout',
         'show_actual_stderr',
         'show_whether_timed_out',
+        'show_student_description',
     )
 
 
@@ -149,6 +154,22 @@ class AGTestCommand(AutograderModel):
         related_name='ag_test_commands',
         on_delete=models.CASCADE,
         help_text="""The AGTestCase that this command belongs to.""")
+
+    staff_description = models.TextField(
+        blank=True,
+        help_text='Text description shown only to staff. Rendered as markdown.'
+    )
+
+    student_description = models.TextField(
+        blank=True,
+        help_text='Text description shown to students. Rendered as markdown.'
+    )
+
+    student_on_fail_description = models.TextField(
+        blank=True,
+        help_text='Additional text shown to students failing this test. '
+                  'Rendered as markdown.'
+    )
 
     stdin_source = models.TextField(
         choices=StdinSource.choices, default=StdinSource.none,

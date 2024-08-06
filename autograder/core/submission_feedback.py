@@ -483,12 +483,12 @@ class SubmissionResultFeedback(ToDictMixin):
                 if fdbk.fdbk_conf.visible:
                     visible.append(fdbk)
             except KeyError:
-                # In certain rare cases, possibly caused by race condition when
-                # deleting a suite/test/command at just the right time, a
+                # In certain rare cases (such as deleting a suite/test/command
+                # after a submission has already been loaded), a
                 # submissions's denormalized AG test results can end up
                 # contaning the PK for a suite/test/command that no longer
-                # exists. Since this is unlikely to happen on a large scale,
-                # we'll just ignore those elements.
+                # exists. Since this will be resolved the next time the
+                # submission is loaded, we'll just ignore those elements.
                 continue
 
         visible.sort(key=lambda item: item.ag_test_suite_order)
@@ -710,7 +710,7 @@ class AGTestSuiteResultFeedback(ToDictMixin):
 
                 if fdbk.fdbk_conf.visible:
                     visible.append(fdbk)
-            except KeyError:  # See comment in AGTestSuiteResultFeedback.ag_test_suite_results
+            except KeyError:  # See comment in SubmissionResultFeedback.ag_test_suite_results
                 continue
 
         visible.sort(key=lambda item: item.ag_test_case_order)
@@ -826,7 +826,7 @@ class AGTestCaseResultFeedback(ToDictMixin):
                 )
                 if fdbk.fdbk_conf.visible:
                     visible.append(fdbk)
-            except KeyError:  # See comment in AGTestSuiteResultFeedback.ag_test_suite_results
+            except KeyError:  # See comment in SubmissionResultFeedback.ag_test_suite_results
                 continue
 
         visible.sort(key=lambda item: item.ag_test_command_order)

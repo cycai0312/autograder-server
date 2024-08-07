@@ -20,3 +20,4 @@ oauth2client
 # (available_timezones implementation)
 # This will help speed up calls to zoneinfo.available_timezones().
 tzdata
+typing-extensions

@@ -104,6 +104,8 @@ sqlparse==0.4.1
     # via django
 traitlets==5.0.5
     # via ipython
+typing-extensions==4.12.2
+    # via -r requirements.in
 tzdata==2023.4
     # via -r requirements.in
 uritemplate==3.0.1

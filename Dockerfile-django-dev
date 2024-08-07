@@ -3,8 +3,7 @@ FROM python:3.10
 RUN pip install pip-tools
 
 COPY ./requirements.txt .
-COPY ./requirements-dev.txt .
-RUN pip-sync requirements.txt requirements-dev.txt
+RUN pip-sync requirements.txt
 
 WORKDIR /usr/src/app
 

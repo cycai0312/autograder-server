@@ -157,6 +157,11 @@ class AGTestSuite(AutograderModel):
                      have yet to be graded do not prevent members of a group from submitting
                      again.''')
 
+    internal_admin_notes = models.TextField(
+        blank=True,
+        help_text='Additional information for admins. Shown only when editing the test suite.'
+    )
+
     staff_description = models.TextField(
         blank=True,
         help_text='Text description shown only to staff. Rendered as markdown.'
@@ -251,6 +256,7 @@ class AGTestSuite(AutograderModel):
         'project',
         'last_modified',
 
+        'internal_admin_notes',
         'staff_description',
         'student_description',
 
@@ -286,6 +292,7 @@ class AGTestSuite(AutograderModel):
     EDITABLE_FIELDS = (
         'name',
 
+        'internal_admin_notes',
         'staff_description',
         'student_description',
 

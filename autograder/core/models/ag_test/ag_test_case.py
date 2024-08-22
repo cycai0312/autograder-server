@@ -56,6 +56,11 @@ class AGTestCase(AutograderModel):
         help_text='''The suite this autograder test belongs to.
                      This field is REQUIRED.''')
 
+    internal_admin_notes = models.TextField(
+        blank=True,
+        help_text='Additional information for admins. Shown only when editing the test case.'
+    )
+
     staff_description = models.TextField(
         blank=True,
         help_text='Text description shown only to staff. Rendered as markdown.'
@@ -148,6 +153,7 @@ class AGTestCase(AutograderModel):
         'name',
         'last_modified',
 
+        'internal_admin_notes',
         'staff_description',
         'student_description',
 
@@ -166,6 +172,7 @@ class AGTestCase(AutograderModel):
         'name',
         'ag_test_suite',
 
+        'internal_admin_notes',
         'staff_description',
         'student_description',
 

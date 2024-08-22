@@ -25,6 +25,10 @@ class AGTestCaseTestCase(UnitTestBase):
         self.assertEqual(name, ag_test.name)
         self.assertEqual(self.ag_suite, ag_test.ag_test_suite)
 
+        self.assertEqual('', ag_test.internal_admin_notes)
+        self.assertEqual('', ag_test.staff_description)
+        self.assertEqual('', ag_test.student_description)
+
         self.assertTrue(ag_test.normal_fdbk_config.visible)
         self.assertTrue(ag_test.normal_fdbk_config.show_individual_commands)
         self.assertTrue(ag_test.normal_fdbk_config.show_student_description)
@@ -180,6 +184,7 @@ class AGTestCaseTestCase(UnitTestBase):
             'pk',
             'name',
             'last_modified',
+            'internal_admin_notes',
             'staff_description',
             'student_description',
             'ag_test_suite',

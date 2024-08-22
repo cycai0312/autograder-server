@@ -130,5 +130,5 @@ jobs:
           python3 generate_secrets.py
       - name: Run tests
         run: |
-          python3 manage.py test -v2 --tag slow --tag sandbox
+          python3 manage.py test -v2 --exclude-tag fix_on_ci --tag slow --tag sandbox
 

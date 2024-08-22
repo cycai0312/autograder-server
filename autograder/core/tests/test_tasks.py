@@ -22,6 +22,7 @@ RUN echo "Hello World"
 )
 
 
+@tag('slow', 'sandbox')
 @mock.patch('autograder.core.tasks.push_image')
 @mock.patch('autograder.utils.retry.sleep', new=mock.Mock())
 class BuildSandboxDockerImageTestCase(UnitTestBase):
@@ -215,7 +216,7 @@ RUN false
             self.assertIn('I am error', task.internal_error_msg)
 
 
-@tag('fix_on_ci')
+@tag('fix_on_ci', 'slow', 'sandbox')
 @mock.patch('autograder.core.tasks.push_image')
 @mock.patch('autograder.utils.retry.sleep', new=mock.Mock())
 class CancelBuildSandboxDockerImageTestCase(TransactionUnitTestBase):

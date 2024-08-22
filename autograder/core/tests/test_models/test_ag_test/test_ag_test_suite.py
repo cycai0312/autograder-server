@@ -67,7 +67,7 @@ class AGTestSuiteTestCase(UnitTestBase):
         self.assertTrue(suite.past_limit_submission_fdbk_config.show_setup_timed_out)
         self.assertTrue(suite.past_limit_submission_fdbk_config.show_setup_stdout)
         self.assertTrue(suite.past_limit_submission_fdbk_config.show_setup_stderr)
-        self.assertFalse(suite.past_limit_submission_fdbk_config.show_student_description)
+        self.assertTrue(suite.past_limit_submission_fdbk_config.show_student_description)
 
         self.assertTrue(suite.staff_viewer_fdbk_config.visible)
         self.assertTrue(suite.staff_viewer_fdbk_config.show_individual_tests)

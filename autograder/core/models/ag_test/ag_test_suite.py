@@ -58,10 +58,6 @@ class AGTestSuiteFeedbackConfig(DictSerializable):
     }
 
 
-def _past_limit_fdbk() -> AGTestSuiteFeedbackConfig:
-    return AGTestSuiteFeedbackConfig(show_student_description=False)
-
-
 class AGTestSuite(AutograderModel):
     """
     A group of autograder test cases to be run inside the same sandbox.
@@ -176,7 +172,7 @@ class AGTestSuite(AutograderModel):
     ultimate_submission_fdbk_config = ag_fields.ValidatedJSONField(
         AGTestSuiteFeedbackConfig, default=AGTestSuiteFeedbackConfig)
     past_limit_submission_fdbk_config = ag_fields.ValidatedJSONField(
-        AGTestSuiteFeedbackConfig, default=_past_limit_fdbk)
+        AGTestSuiteFeedbackConfig, default=AGTestSuiteFeedbackConfig)
     staff_viewer_fdbk_config = ag_fields.ValidatedJSONField(
         AGTestSuiteFeedbackConfig, default=AGTestSuiteFeedbackConfig)
 

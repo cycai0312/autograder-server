@@ -21,6 +21,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='agtestsuite',
             name='past_limit_submission_fdbk_config',
-            field=autograder.core.fields.ValidatedJSONField(default=autograder.core.models.ag_test.ag_test_suite._past_limit_fdbk, serializable_class=autograder.core.models.ag_test.ag_test_suite.AGTestSuiteFeedbackConfig),
+            field=autograder.core.fields.ValidatedJSONField(default=autograder.core.models.ag_test.ag_test_suite.AGTestSuiteFeedbackConfig, serializable_class=autograder.core.models.ag_test.ag_test_suite.AGTestSuiteFeedbackConfig),
         ),
     ]

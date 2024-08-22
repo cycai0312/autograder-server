@@ -535,6 +535,7 @@ class NoRetryOnObjectNotFoundTestCase(TransactionUnitTestBase):
         sleep_mock.assert_not_called()
 
 
+@tag('slow', 'sandbox')
 @mock.patch('autograder.utils.retry.sleep')
 class GradeMutationTestSuiteTeardownErrorHandlingTestCase(TransactionUnitTestBase):
     def setUp(self):

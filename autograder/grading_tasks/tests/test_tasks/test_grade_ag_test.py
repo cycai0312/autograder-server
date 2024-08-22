@@ -238,6 +238,7 @@ class AGTestCommandCorrectnessTestCase(UnitTestBase):
         self.assertFalse(res.stderr_correct)
 
 
+@tag('slow', 'sandbox')
 @mock.patch('autograder.utils.retry.sleep')
 class AGTestCommandStdinSourceTestCase(UnitTestBase):
     def setUp(self):
@@ -300,6 +301,7 @@ class AGTestCommandStdinSourceTestCase(UnitTestBase):
         self.assertEqual(self.setup_stderr, open(res.stdout_filename).read())
 
 
+@tag('slow', 'sandbox')
 @mock.patch('autograder.utils.retry.sleep')
 class InstructorFilePermissionsTestCase(UnitTestBase):
     def setUp(self):

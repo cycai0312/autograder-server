@@ -49,9 +49,9 @@ class GroupManager(ag_model_base.AutograderModelManager['Group']):
             member_names = [
                 user.username for user in sorted(members, key=lambda user: user.username)]
             group = self.model(_member_names=member_names, **kwargs)
+            group.full_clean()
             group.save()
             group.members.add(*members)
-            group.full_clean()
             return group
 
 
@@ -98,6 +98,14 @@ class Group(ag_model_base.AutograderModel):
         help_text="""When this field is set, it indicates that members
             of this submission group can submit until this specified
             date, overriding the project closing time.
+            Default value: None""")
+
+    soft_extended_due_date = models.DateTimeField(
+        null=True, default=None, blank=True,
+        help_text="""When this field is set, it indicates the extended due date
+            that is visible to members of the group. Members of the group will
+            still be able to submit after this date but before the
+            extended_due_date.
             Default value: None""")
 
     # Remove in version 5.0.0
@@ -179,6 +187,23 @@ class Group(ag_model_base.AutograderModel):
 
         return utils.count_if(self.submissions.all(), _is_towards_limit)
 
+    def clean(self) -> None:
+        super().clean()
+
+        if self.extended_due_date is not None:
+            self.extended_due_date = self.extended_due_date.replace(second=0, microsecond=0)
+        if self.soft_extended_due_date is not None:
+            self.soft_extended_due_date = self.soft_extended_due_date.replace(
+                second=0, microsecond=0)
+
+        print(f"{self.extended_due_date=}")
+
+        if self.extended_due_date is not None and self.soft_extended_due_date is not None:
+            if self.extended_due_date < self.soft_extended_due_date:
+                raise ValidationError(
+                    {'soft_extended_due_date': (
+                        'Soft extended due date must be before hard extended due date')})
+
     def save(self, *args: Any, **kwargs: Any) -> None:
         super().save(*args, **kwargs)
 
@@ -235,6 +260,7 @@ class Group(ag_model_base.AutograderModel):
         'pk',
         'project',
         'extended_due_date',
+        'soft_extended_due_date',
         'member_names',
         'members',
 
@@ -250,7 +276,11 @@ class Group(ag_model_base.AutograderModel):
     )
     SERIALIZE_RELATED = ('members',)
 
-    EDITABLE_FIELDS = ('extended_due_date', 'bonus_submissions_remaining')
+    EDITABLE_FIELDS = (
+        'extended_due_date',
+        'soft_extended_due_date',
+        'bonus_submissions_remaining'
+    )
 
     def to_dict(self) -> Dict[str, object]:
         result = super().to_dict()

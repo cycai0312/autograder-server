@@ -5551,6 +5551,14 @@ components:
           nullable: true
           type: string
           format: date-time
+        soft_extended_due_date:
+          description: "When this field is set, it indicates the extended due date\n\
+            \            that is visible to members of the group. Members of the group\
+            \ will\n            still be able to submit after this date but before\
+            \ the\n            extended_due_date.\n            Default value: None"
+          nullable: true
+          type: string
+          format: date-time
         member_names:
           description: A list of usernames of the group members, sorted alphabetically.
           type: array
@@ -5601,6 +5609,7 @@ components:
       - pk
       - project
       - extended_due_date
+      - soft_extended_due_date
       - member_names
       - members
       - bonus_submissions_remaining
@@ -5632,6 +5641,14 @@ components:
             \      of this submission group can submit until this specified\n    \
             \        date, overriding the project closing time.\n            Default\
             \ value: None"
+          nullable: true
+          type: string
+          format: date-time
+        soft_extended_due_date:
+          description: "When this field is set, it indicates the extended due date\n\
+            \            that is visible to members of the group. Members of the group\
+            \ will\n            still be able to submit after this date but before\
+            \ the\n            extended_due_date.\n            Default value: None"
           nullable: true
           type: string
           format: date-time

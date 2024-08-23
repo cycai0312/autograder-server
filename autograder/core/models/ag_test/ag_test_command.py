@@ -156,6 +156,11 @@ class AGTestCommand(AutograderModel):
         on_delete=models.CASCADE,
         help_text="""The AGTestCase that this command belongs to.""")
 
+    internal_admin_notes = models.TextField(
+        blank=True,
+        help_text='Additional information for admins. Shown only when editing the command.'
+    )
+
     staff_description = models.TextField(
         blank=True,
         help_text='Text description shown only to staff. Rendered as markdown.'
@@ -425,6 +430,7 @@ class AGTestCommand(AutograderModel):
         'last_modified',
         'cmd',
 
+        'internal_admin_notes',
         'staff_description',
         'student_description',
         'student_on_fail_description',
@@ -473,6 +479,7 @@ class AGTestCommand(AutograderModel):
 
         'cmd',
 
+        'internal_admin_notes',
         'staff_description',
         'student_description',
         'student_on_fail_description',

@@ -528,6 +528,7 @@ class RerunSubmissionsTaskDetailViewSetTestCase(AGViewTestBase):
         self.assertFalse(self.rerun_task.is_cancelled)
 
 
+@tag('slow', 'sandbox')
 @mock.patch('autograder.utils.retry.sleep')
 class NoRetryOnObjectNotFoundTestCase(TransactionUnitTestBase):
     def setUp(self):
@@ -594,6 +595,7 @@ class NoRetryOnObjectNotFoundTestCase(TransactionUnitTestBase):
         sleep_mock.assert_not_called()
 
 
+@tag('slow', 'sandbox')
 class RerunCancelledTestCase(TransactionUnitTestBase):
     def setUp(self):
         super().setUp()
@@ -630,6 +632,7 @@ class RerunCancelledTestCase(TransactionUnitTestBase):
         self.assertEqual(0, rerun_task.progress)
 
 
+@tag('slow', 'sandbox')
 @mock.patch('autograder.utils.retry.sleep')
 class RejectSubmissionTestCase(TransactionUnitTestBase):
     def test_submission_reject_in_rerun_does_not_refund_bonus_submission(self, *args) -> None:

@@ -23,6 +23,10 @@ class AGTestSuiteTestCase(UnitTestBase):
         self.assertEqual(suite_name, suite.name)
         self.assertEqual(self.project, suite.project)
 
+        self.assertEqual('', suite.internal_admin_notes)
+        self.assertEqual('', suite.staff_description)
+        self.assertEqual('', suite.student_description)
+
         self.assertCountEqual([], suite.instructor_files_needed.all())
         self.assertTrue(suite.read_only_instructor_files)
         self.assertCountEqual([], suite.student_files_needed.all())
@@ -63,7 +67,7 @@ class AGTestSuiteTestCase(UnitTestBase):
         self.assertTrue(suite.past_limit_submission_fdbk_config.show_setup_timed_out)
         self.assertTrue(suite.past_limit_submission_fdbk_config.show_setup_stdout)
         self.assertTrue(suite.past_limit_submission_fdbk_config.show_setup_stderr)
-        self.assertFalse(suite.past_limit_submission_fdbk_config.show_student_description)
+        self.assertTrue(suite.past_limit_submission_fdbk_config.show_student_description)
 
         self.assertTrue(suite.staff_viewer_fdbk_config.visible)
         self.assertTrue(suite.staff_viewer_fdbk_config.show_individual_tests)
@@ -92,6 +96,9 @@ class AGTestSuiteTestCase(UnitTestBase):
         suite = ag_models.AGTestSuite.objects.validate_and_create(
             name=name,
             project=project,
+            internal_admin_notes='some very internal admin notes',
+            staff_description='an description for staff',
+            student_description='info for students',
             instructor_files_needed=instructor_files_needed,
             read_only_instructor_files=False,
             student_files_needed=student_files_needed,
@@ -114,6 +121,9 @@ class AGTestSuiteTestCase(UnitTestBase):
         suite.refresh_from_db()
         self.assertEqual(name, suite.name)
         self.assertEqual(project, suite.project)
+        self.assertEqual('some very internal admin notes', suite.internal_admin_notes)
+        self.assertEqual('an description for staff', suite.staff_description)
+        self.assertEqual('info for students', suite.student_description)
         self.assertCountEqual(instructor_files_needed, suite.instructor_files_needed.all())
         self.assertFalse(suite.read_only_instructor_files)
         self.assertCountEqual(student_files_needed, suite.student_files_needed.all())
@@ -211,6 +221,7 @@ class AGTestSuiteTestCase(UnitTestBase):
             'project',
             'last_modified',
 
+            'internal_admin_notes',
             'staff_description',
             'student_description',
 

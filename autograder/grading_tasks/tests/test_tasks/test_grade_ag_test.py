@@ -238,6 +238,7 @@ class AGTestCommandCorrectnessTestCase(UnitTestBase):
         self.assertFalse(res.stderr_correct)
 
 
+@tag('slow', 'sandbox')
 @mock.patch('autograder.utils.retry.sleep')
 class AGTestCommandStdinSourceTestCase(UnitTestBase):
     def setUp(self):
@@ -300,6 +301,7 @@ class AGTestCommandStdinSourceTestCase(UnitTestBase):
         self.assertEqual(self.setup_stderr, open(res.stdout_filename).read())
 
 
+@tag('slow', 'sandbox')
 @mock.patch('autograder.utils.retry.sleep')
 class InstructorFilePermissionsTestCase(UnitTestBase):
     def setUp(self):
@@ -662,6 +664,7 @@ class AGTestSuiteRerunTestCase(UnitTestBase):
         self.assertFalse(suite_result.setup_timed_out)
 
 
+@tag('slow', 'sandbox')
 @mock.patch('autograder.utils.retry.sleep')
 class NoRetryOnObjectNotFoundTestCase(TransactionUnitTestBase):
     def test_ag_test_suite_not_found_no_retry(self, sleep_mock) -> None:
@@ -777,6 +780,7 @@ class NoRetryOnObjectNotFoundTestCase(TransactionUnitTestBase):
         sleep_mock.assert_not_called()
 
 
+@tag('slow', 'sandbox')
 @mock.patch('autograder.utils.retry.sleep')
 class GradeAGTestSuiteCallbacksTestCase(TransactionUnitTestBase):
     def setUp(self):
@@ -861,6 +865,7 @@ class GradeAGTestSuiteCallbacksTestCase(TransactionUnitTestBase):
         self.assertEqual(self.submission, case_result.ag_test_suite_result.submission)
 
 
+@tag('slow', 'sandbox')
 @mock.patch('autograder.utils.retry.sleep')
 class GradeAGTestSuiteTeardownErrorHandlingTestCase(TransactionUnitTestBase):
     def setUp(self):

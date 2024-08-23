@@ -6039,6 +6039,11 @@ components:
           nullable: false
           type: string
           format: date-time
+        internal_admin_notes:
+          description: Additional information for admins. Shown only when editing
+            the test suite.
+          nullable: false
+          type: string
         staff_description:
           description: Text description shown only to staff. Rendered as markdown.
           nullable: false
@@ -6135,6 +6140,7 @@ components:
       - name
       - project
       - last_modified
+      - internal_admin_notes
       - staff_description
       - student_description
       - instructor_files_needed
@@ -6159,6 +6165,11 @@ components:
             \   Must be non-empty and non-null.\n                     Must be unique\
             \ among suites that belong to the same project.\n                    \
             \ This field is REQUIRED."
+          nullable: false
+          type: string
+        internal_admin_notes:
+          description: Additional information for admins. Shown only when editing
+            the test suite.
           nullable: false
           type: string
         staff_description:
@@ -6256,6 +6267,11 @@ components:
             \   Must be non-empty and non-null.\n                     Must be unique\
             \ among suites that belong to the same project.\n                    \
             \ This field is REQUIRED."
+          nullable: false
+          type: string
+        internal_admin_notes:
+          description: Additional information for admins. Shown only when editing
+            the test suite.
           nullable: false
           type: string
         staff_description:
@@ -6393,6 +6409,11 @@ components:
           nullable: false
           type: string
           format: date-time
+        internal_admin_notes:
+          description: Additional information for admins. Shown only when editing
+            the test case.
+          nullable: false
+          type: string
         staff_description:
           description: Text description shown only to staff. Rendered as markdown.
           nullable: false
@@ -6436,6 +6457,7 @@ components:
       - pk
       - name
       - last_modified
+      - internal_admin_notes
       - staff_description
       - student_description
       - ag_test_suite
@@ -6459,6 +6481,11 @@ components:
             \        This field is REQUIRED."
           nullable: false
           type: integer
+        internal_admin_notes:
+          description: Additional information for admins. Shown only when editing
+            the test case.
+          nullable: false
+          type: string
         staff_description:
           description: Text description shown only to staff. Rendered as markdown.
           nullable: false
@@ -6504,6 +6531,11 @@ components:
             \        This field is REQUIRED."
           nullable: false
           type: integer
+        internal_admin_notes:
+          description: Additional information for admins. Shown only when editing
+            the test case.
+          nullable: false
+          type: string
         staff_description:
           description: Text description shown only to staff. Rendered as markdown.
           nullable: false
@@ -6576,6 +6608,11 @@ components:
             \   Note: This string defaults to the \"true\" command\n             \
             \        (which does nothing and returns 0) so that AGCommands are\n \
             \                    default-creatable."
+          nullable: false
+          type: string
+        internal_admin_notes:
+          description: Additional information for admins. Shown only when editing
+            the command.
           nullable: false
           type: string
         staff_description:
@@ -6788,6 +6825,7 @@ components:
       - ag_test_case
       - last_modified
       - cmd
+      - internal_admin_notes
       - staff_description
       - student_description
       - student_on_fail_description
@@ -6837,6 +6875,11 @@ components:
             \   Note: This string defaults to the \"true\" command\n             \
             \        (which does nothing and returns 0) so that AGCommands are\n \
             \                    default-creatable."
+          nullable: false
+          type: string
+        internal_admin_notes:
+          description: Additional information for admins. Shown only when editing
+            the command.
           nullable: false
           type: string
         staff_description:
@@ -7063,6 +7106,11 @@ components:
             \   Note: This string defaults to the \"true\" command\n             \
             \        (which does nothing and returns 0) so that AGCommands are\n \
             \                    default-creatable."
+          nullable: false
+          type: string
+        internal_admin_notes:
+          description: Additional information for admins. Shown only when editing
+            the command.
           nullable: false
           type: string
         staff_description:

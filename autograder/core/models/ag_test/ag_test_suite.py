@@ -58,10 +58,6 @@ class AGTestSuiteFeedbackConfig(DictSerializable):
     }
 
 
-def _past_limit_fdbk() -> AGTestSuiteFeedbackConfig:
-    return AGTestSuiteFeedbackConfig(show_student_description=False)
-
-
 class AGTestSuite(AutograderModel):
     """
     A group of autograder test cases to be run inside the same sandbox.
@@ -161,6 +157,11 @@ class AGTestSuite(AutograderModel):
                      have yet to be graded do not prevent members of a group from submitting
                      again.''')
 
+    internal_admin_notes = models.TextField(
+        blank=True,
+        help_text='Additional information for admins. Shown only when editing the test suite.'
+    )
+
     staff_description = models.TextField(
         blank=True,
         help_text='Text description shown only to staff. Rendered as markdown.'
@@ -176,7 +177,7 @@ class AGTestSuite(AutograderModel):
     ultimate_submission_fdbk_config = ag_fields.ValidatedJSONField(
         AGTestSuiteFeedbackConfig, default=AGTestSuiteFeedbackConfig)
     past_limit_submission_fdbk_config = ag_fields.ValidatedJSONField(
-        AGTestSuiteFeedbackConfig, default=_past_limit_fdbk)
+        AGTestSuiteFeedbackConfig, default=AGTestSuiteFeedbackConfig)
     staff_viewer_fdbk_config = ag_fields.ValidatedJSONField(
         AGTestSuiteFeedbackConfig, default=AGTestSuiteFeedbackConfig)
 
@@ -255,6 +256,7 @@ class AGTestSuite(AutograderModel):
         'project',
         'last_modified',
 
+        'internal_admin_notes',
         'staff_description',
         'student_description',
 
@@ -290,6 +292,7 @@ class AGTestSuite(AutograderModel):
     EDITABLE_FIELDS = (
         'name',
 
+        'internal_admin_notes',
         'staff_description',
         'student_description',
 

@@ -40,6 +40,11 @@ class AGTestCommandMiscTestCase(UnitTestBase):
         ag_cmd: ag_models.AGTestCommand = ag_models.AGTestCommand.objects.validate_and_create(
             name=self.name, ag_test_case=self.ag_test, cmd=self.cmd)
 
+        self.assertEqual('', ag_cmd.internal_admin_notes)
+        self.assertEqual('', ag_cmd.staff_description)
+        self.assertEqual('', ag_cmd.student_description)
+        self.assertEqual('', ag_cmd.student_on_fail_description)
+
         self.assertEqual(ag_models.StdinSource.none, ag_cmd.stdin_source)
         self.assertEqual('', ag_cmd.stdin_text)
         self.assertIsNone(ag_cmd.stdin_instructor_file)
@@ -505,6 +510,7 @@ class AGTestCommandMiscTestCase(UnitTestBase):
             'last_modified',
             'cmd',
 
+            'internal_admin_notes',
             'staff_description',
             'student_description',
             'student_on_fail_description',

@@ -207,6 +207,7 @@ class GroupDetailView(AGModelDetailView):
         group = self.get_object()
 
         update_data = dict(request.data)
+        print(update_data)
         if 'member_names' in update_data:
             users = [
                 User.objects.get_or_create(

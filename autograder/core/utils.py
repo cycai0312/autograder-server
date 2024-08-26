@@ -6,7 +6,7 @@ import os
 import re
 import subprocess
 import typing
-from typing import List, Tuple, Type, TypeVar, cast
+from typing import Any, List, Tuple, Type, TypeVar, cast
 import zoneinfo
 
 from django.conf import settings
@@ -20,6 +20,64 @@ if typing.TYPE_CHECKING:
     from .models.group import Group
     from .models.project import Project
     from .models.submission import Submission
+
+
+class InvalidSoftDeadlineError(Exception):
+    """
+    Raised when a soft deadline or due date is an invalid value (not None or
+    a datetime.datetime object). This is a helper exception to make it easier
+    to abstract deadline validation despite different field names.
+    """
+    pass
+
+
+class InvalidHardDeadlineError(Exception):
+    """
+    Raised when a hard deadline or due date is an invalid value (not None or
+    a datetime.datetime object). This is a helper exception to make it easier
+    to abstract deadline validation despite different field names.
+    """
+    pass
+
+
+class HardDeadlineBeforeSoftDeadlineError(Exception):
+    """
+    Raised when a soft deadline or due date is later than a hard deadline or
+    due date. This is a helper exception to make it easier to abstract deadline
+    validation despite different field names.
+    """
+    pass
+
+
+def clean_and_validate_soft_and_hard_deadlines(
+    soft_deadline: Any,
+    hard_deadline: Any
+) -> Tuple[datetime.datetime | None, datetime.datetime | None]:
+    """
+    Validate and remove seconds and microseconds from deadline dates.
+
+    :raises:
+        InvalidSoftDeadlineError: when soft_deadline is not a datetime.datetime object or None.
+    :raises:
+        InvalidHardDeadlineError: when hard_deadline is not a datetime.datetime object or None.
+    :raises:
+        SoftDeadlineAfterHardDeadlineError: when hard_deadline < soft_deadline.
+    """
+    if hard_deadline is not None and not isinstance(hard_deadline, datetime.datetime):
+        raise InvalidHardDeadlineError
+    if soft_deadline is not None and not isinstance(soft_deadline, datetime.datetime):
+        raise InvalidSoftDeadlineError
+
+    if hard_deadline is not None:
+        hard_deadline = hard_deadline.replace(second=0, microsecond=0)
+    if soft_deadline is not None:
+        soft_deadline = soft_deadline.replace(second=0, microsecond=0)
+
+    if hard_deadline is not None and soft_deadline is not None:
+        if hard_deadline < soft_deadline:
+            raise HardDeadlineBeforeSoftDeadlineError
+
+    return soft_deadline, hard_deadline
 
 
 class DiffResult:

@@ -2,6 +2,10 @@
 
 from django.db import migrations, models
 
+def copy_extended_deadline_to_soft_extended_deadline(apps, schema):
+    model = apps.get_model('core', 'Group')
+    model.objects.all().update(soft_extended_due_date=models.F('extended_due_date'))
+    model.objects.all().update(hard_extended_due_date=models.F('extended_due_date'))
 
 class Migration(migrations.Migration):
 
@@ -15,4 +19,19 @@ class Migration(migrations.Migration):
             name='soft_extended_due_date',
             field=models.DateTimeField(blank=True, default=None, help_text='When this field is set, it indicates the extended due date\n            that is visible to members of the group. Members of the group will\n            still be able to submit after this date but before the\n            extended_due_date.\n            Default value: None', null=True),
         ),
+        migrations.AddField(
+            model_name='group',
+            name='hard_extended_due_date',
+            field=models.DateTimeField(blank=True, default=None, null=True,
+                help_text="""When this field is set, it indicates that members
+                    of this submission group can submit until this specified
+                    date, overriding the project closing time.
+                    Default value: None"""),
+        ),
+        migrations.RunPython(copy_extended_deadline_to_soft_extended_deadline),
+        migrations.RemoveField(
+            model_name='group',
+            name='extended_due_date',
+            field=models.DateTimeField(blank=True, default=None, null=True),
+        )
     ]

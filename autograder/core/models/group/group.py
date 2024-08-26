@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, Iterable, List, cast
+from typing import Any, Dict, Iterable, List, Optional, cast
+from datetime import datetime
 import zoneinfo
 
 import django.contrib.postgres.fields as pg_fields
@@ -93,7 +94,16 @@ class Group(ag_model_base.AutograderModel):
     project = models.ForeignKey(Project, related_name="groups",
                                 on_delete=models.CASCADE)
 
-    extended_due_date = models.DateTimeField(
+    @property
+    def extended_due_date(self) -> Optional[datetime]:
+        return self.soft_extended_due_date
+
+    @extended_due_date.setter
+    def extended_due_date(self, value: Optional[datetime]) -> None:
+        self.soft_extended_due_date = value
+        self.hard_extended_due_date = value
+
+    hard_extended_due_date = models.DateTimeField(
         null=True, default=None, blank=True,
         help_text="""When this field is set, it indicates that members
             of this submission group can submit until this specified
@@ -190,19 +200,24 @@ class Group(ag_model_base.AutograderModel):
     def clean(self) -> None:
         super().clean()
 
-        if self.extended_due_date is not None:
-            self.extended_due_date = self.extended_due_date.replace(second=0, microsecond=0)
-        if self.soft_extended_due_date is not None:
-            self.soft_extended_due_date = self.soft_extended_due_date.replace(
-                second=0, microsecond=0)
+        try:
+            clean_soft, clean_hard = core_ut.clean_and_validate_soft_and_hard_deadlines(
+                self.soft_extended_due_date, self.hard_extended_due_date)
+        except core_ut.InvalidSoftDeadlineError:
+            raise ValidationError(
+                {'soft_extended_due_date': (
+                    'Soft extended due date must be a valid date')})
+        except core_ut.InvalidHardDeadlineError:
+            raise ValidationError(
+                {'extended_due_date': (
+                    'Hard extended due date must be a valid date')})
+        except core_ut.HardDeadlineBeforeSoftDeadlineError:
+            raise ValidationError(
+                {'soft_extended_due_date': (
+                    'Soft extended due date must not be after hard extended due date')})
 
-        print(f"{self.extended_due_date=}")
-
-        if self.extended_due_date is not None and self.soft_extended_due_date is not None:
-            if self.extended_due_date < self.soft_extended_due_date:
-                raise ValidationError(
-                    {'soft_extended_due_date': (
-                        'Soft extended due date must be before hard extended due date')})
+        self.soft_extended_due_date = clean_soft
+        self.hard_extended_due_date = clean_hard
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         super().save(*args, **kwargs)
@@ -259,8 +274,9 @@ class Group(ag_model_base.AutograderModel):
     SERIALIZABLE_FIELDS = (
         'pk',
         'project',
-        'extended_due_date',
+        'hard_extended_due_date',
         'soft_extended_due_date',
+        'extended_due_date',
         'member_names',
         'members',
 
@@ -278,6 +294,7 @@ class Group(ag_model_base.AutograderModel):
 
     EDITABLE_FIELDS = (
         'extended_due_date',
+        'hard_extended_due_date',
         'soft_extended_due_date',
         'bonus_submissions_remaining'
     )

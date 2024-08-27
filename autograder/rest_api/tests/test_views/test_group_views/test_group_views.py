@@ -1,8 +1,8 @@
 import datetime
-from typing import List
+from typing import List, Dict
 from unittest import mock
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
@@ -66,8 +66,12 @@ class ListGroupsTestCase(AGViewTestBase):
 
     def test_staff_list_groups(self):
         staff = obj_build.make_staff_user(self.project.course)
+        groups = self.build_groups(self.project)
+        for group in groups:
+            group.pop('hard_extended_due_date', None)
+
         self.do_list_objects_test(
-            self.client, staff, self.url, self.build_groups(self.project), check_order=True)
+            self.client, staff, self.url, groups, check_order=True)
 
     def test_student_list_groups_permission_denied(self):
         self.project.validate_and_update(visible_to_students=True)
@@ -77,8 +81,12 @@ class ListGroupsTestCase(AGViewTestBase):
 
     def test_handgrader_list_groups(self):
         handgrader = obj_build.make_handgrader_user(self.course)
+        groups = self.build_groups(self.project)
+        for group in groups:
+            group.pop('hard_extended_due_date', None)
+
         self.do_list_objects_test(
-            self.client, handgrader, self.url, self.build_groups(self.project))
+            self.client, handgrader, self.url, groups)
 
     def test_guest_list_groups_permission_denied(self):
         self.project.validate_and_update(visible_to_students=True, guests_can_submit=True)
@@ -315,32 +323,48 @@ class RetrieveGroupTestCase(AGViewTestBase):
         admin = obj_build.make_admin_user(self.course)
         staff = obj_build.make_staff_user(self.course)
 
+        def expected_data(group):
+            data = group.to_dict()
+            if user is staff:
+                data.pop("hard_extended_due_date", None)
+            return data
+
         for user in admin, staff:
             student_group = obj_build.make_group(project=self.project)
             self.do_get_object_test(
-                self.client, user, self.group_url(student_group), student_group.to_dict())
+                self.client, user, self.group_url(student_group), expected_data(student_group))
 
             guest_group = obj_build.make_group(
                 project=self.project, members_role=obj_build.UserRole.guest)
             self.do_get_object_test(
-                self.client, user, self.group_url(guest_group), guest_group.to_dict())
+                self.client, user, self.group_url(guest_group), expected_data(guest_group))
 
             admin_group = obj_build.make_group(
                 project=self.project, members_role=obj_build.UserRole.admin)
             self.do_get_object_test(
-                self.client, user, self.group_url(admin_group), admin_group.to_dict())
+                self.client, user, self.group_url(admin_group), expected_data(admin_group))
 
     def test_student_get_group(self):
         self.project.validate_and_update(visible_to_students=True)
         group = obj_build.make_group(project=self.project)
+
+        # students shouldn't see hard extended due date
+        expected_data = group.to_dict()
+        expected_data.pop("hard_extended_due_date", None)
+
         self.do_get_object_test(
-            self.client, group.members.first(), self.group_url(group), group.to_dict())
+            self.client, group.members.first(), self.group_url(group), expected_data)
 
     def test_guest_get_group(self):
         self.project.validate_and_update(visible_to_students=True, guests_can_submit=True)
         group = obj_build.make_group(project=self.project, members_role=obj_build.UserRole.guest)
+
+        # guests shouldn't see hard extended due date
+        expected_data = group.to_dict()
+        expected_data.pop("hard_extended_due_date", None)
+
         self.do_get_object_test(
-            self.client, group.members.first(), self.group_url(group), group.to_dict())
+            self.client, group.members.first(), self.group_url(group), expected_data)
 
     def test_non_member_get_group_permission_denied(self):
         self.project.validate_and_update(visible_to_students=True)

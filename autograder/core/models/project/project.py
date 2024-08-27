@@ -251,8 +251,8 @@ class Project(AutograderModel):
                     'Closing time must be a valid date')})
         except core_ut.HardDeadlineBeforeSoftDeadlineError:
             raise exceptions.ValidationError(
-                {'soft_closing_time': (
-                    'Soft closing time must not be after hard closing time')})
+                {'closing_time': (
+                    'Closing time must not be before soft closing time')})
 
         self.soft_closing_time = clean_soft
         self.closing_time = clean_hard

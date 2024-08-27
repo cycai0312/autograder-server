@@ -92,9 +92,7 @@ class AGViewTestBase(UnitTestBase):
         ignore_fields = list(ignore_fields)
         ignore_fields.append('last_modified')
 
-        expected_data = ag_model_obj.to_dict()
-        for field in ignore_fields:
-            expected_data.pop(field, None)
+        expected_data = utils.exclude_dict(ag_model_obj.to_dict(), ignore_fields)
         for key, value in request_data.items():
             if isinstance(value, dict):
                 expected_data[key].update(value)
@@ -171,9 +169,6 @@ class AGViewTestBase(UnitTestBase):
         self.assertEqual(expected_status, response.status_code)
 
         ag_model_obj = ag_model_obj._meta.model.objects.get(pk=ag_model_obj.pk)
-
-        print(f"{expected_data=}")
-        print(f"{ag_model_obj.to_dict()=}")
         self.assert_dict_contents_equal(expected_data, ag_model_obj.to_dict())
 
         return response

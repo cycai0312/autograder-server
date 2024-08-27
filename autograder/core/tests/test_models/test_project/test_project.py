@@ -220,8 +220,7 @@ class HardAndSoftClosingTimeTestCase(UnitTestBase):
                 name='stove', course=self.course,
                 closing_time=closing_time,
                 soft_closing_time=soft_closing_time)
-
-        self.assertIn('soft_closing_time', cm.exception.message_dict)
+        self.assertIn('closing_time', cm.exception.message_dict)
 
     def test_error_soft_closing_time_not_a_date(self):
         soft_closing_time = "foobar"

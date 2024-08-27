@@ -249,8 +249,9 @@ class UpdateProjectTestCase(AGViewTestBase):
         }
 
         admin = obj_build.make_admin_user(self.course)
-        self.do_patch_object_invalid_args_test(
+        response = self.do_patch_object_invalid_args_test(
             self.project, self.client, admin, self.url, request_data)
+        self.assertIn('closing_time', response.data)
 
     def test_non_admin_edit_project_permission_denied(self):
         staff = obj_build.make_staff_user(self.course)

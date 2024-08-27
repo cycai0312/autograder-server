@@ -223,6 +223,24 @@ class HardAndSoftClosingTimeTestCase(UnitTestBase):
 
         self.assertIn('soft_closing_time', cm.exception.message_dict)
 
+    def test_error_soft_closing_time_not_a_date(self):
+        soft_closing_time = "foobar"
+        with self.assertRaises(exceptions.ValidationError) as cm:
+            ag_models.Project.objects.validate_and_create(
+                name='stove', course=self.course,
+                soft_closing_time=soft_closing_time)
+
+        self.assertIn('soft_closing_time', cm.exception.message_dict)
+
+    def test_error_closing_time_not_a_date(self):
+        closing_time = "foobar"
+        with self.assertRaises(exceptions.ValidationError) as cm:
+            ag_models.Project.objects.validate_and_create(
+                name='stove', course=self.course,
+                closing_time=closing_time)
+
+        self.assertIn('closing_time', cm.exception.message_dict)
+
 
 class ProjectMiscErrorTestCase(UnitTestBase):
     def setUp(self):

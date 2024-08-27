@@ -209,7 +209,7 @@ class Group(ag_model_base.AutograderModel):
                     'Soft extended due date must be a valid date')})
         except core_ut.InvalidHardDeadlineError:
             raise ValidationError(
-                {'extended_due_date': (
+                {'hard_extended_due_date': (
                     'Hard extended due date must be a valid date')})
         except core_ut.HardDeadlineBeforeSoftDeadlineError:
             raise ValidationError(

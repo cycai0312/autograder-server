@@ -233,7 +233,7 @@ class UpdateProjectTestCase(AGViewTestBase):
         admin = obj_build.make_admin_user(self.course)
         self.do_patch_object_test(self.project, self.client, admin, self.url, request_data)
 
-    def test_edit_project_invalid_settings(self):
+    def test_edit_project_invalid_group_size(self):
         request_data = {
             'min_group_size': 2,
             'max_group_size': 1
@@ -242,6 +242,16 @@ class UpdateProjectTestCase(AGViewTestBase):
         admin = obj_build.make_admin_user(self.course)
         self.do_patch_object_invalid_args_test(
             self.project, self.client, admin, self.url, request_data)
+
+    def test_edit_project_invalid_closing_time(self):
+        request_data = {
+            'closing_time': 'not a date :('
+        }
+
+        admin = obj_build.make_admin_user(self.course)
+        response = self.do_patch_object_invalid_args_test(
+            self.project, self.client, admin, self.url, request_data)
+        self.assertIn('closing_time', response.data)
 
     def test_non_admin_edit_project_permission_denied(self):
         staff = obj_build.make_staff_user(self.course)

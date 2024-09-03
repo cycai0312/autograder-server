@@ -63,7 +63,9 @@ class GroupTestCase(_SetUp):
 
         group.refresh_from_db()
 
-        self.assertEqual(group.extended_due_date, extended_due_date)
+        self.assertEqual(
+            group.extended_due_date,
+            extended_due_date.replace(second=0, microsecond=0))
         self.assertCountEqual(self.student_users, group.members.all())
         self.assertEqual(self.project, group.project)
 
@@ -202,6 +204,8 @@ class GroupTestCase(_SetUp):
             'members',
             'project',
             'extended_due_date',
+            'soft_extended_due_date',
+            'hard_extended_due_date',
 
             'bonus_submissions_remaining',
 
@@ -221,8 +225,10 @@ class GroupTestCase(_SetUp):
         self.assertIsInstance(serialized['members'][0], dict)
 
     def test_editable_fields(self):
-        self.assertCountEqual(['extended_due_date', 'bonus_submissions_remaining'],
-                              ag_models.Group.get_editable_fields())
+        self.assertCountEqual(
+            ['extended_due_date', 'soft_extended_due_date', 'hard_extended_due_date',
+             'bonus_submissions_remaining'],
+            ag_models.Group.get_editable_fields())
 
 
 class BonusSubmissionTokenCountTestCase(test_ut.UnitTestBase):
@@ -632,3 +638,67 @@ class GroupMembershipTestCase(_SetUp):
             ag_models.Group.objects.validate_and_create(
                 members=self.staff_users + self.student_users,
                 project=self.project)
+
+
+class ExtendedDueDateBackwardsCompatabilityTestCase(_SetUp):
+    def test_extended_due_date_sets_hard_and_soft_extended_due_dates(self):
+        extended_due_date = timezone.now() + datetime.timedelta(days=1)
+        group = ag_models.Group.objects.validate_and_create(
+            members=self.student_users,
+            project=self.project,
+            extended_due_date=extended_due_date)
+
+        group.refresh_from_db()
+        self.assertEqual(
+            extended_due_date.replace(second=0, microsecond=0),
+            group.extended_due_date)
+        self.assertEqual(
+            extended_due_date.replace(second=0, microsecond=0),
+            group.soft_extended_due_date)
+        self.assertEqual(
+            extended_due_date.replace(second=0, microsecond=0),
+            group.hard_extended_due_date)
+
+    def test_getting_extended_due_date_reads_soft_extended_due_date(self):
+        soft_extended_due_date = timezone.now() + datetime.timedelta(days=1)
+        hard_extended_due_date = soft_extended_due_date + datetime.timedelta(days=1)
+        group = ag_models.Group.objects.validate_and_create(
+            members=self.student_users,
+            project=self.project,
+            soft_extended_due_date=soft_extended_due_date,
+            hard_extended_due_date=hard_extended_due_date)
+
+        self.assertEqual(
+            soft_extended_due_date.replace(second=0, microsecond=0),
+            group.extended_due_date)
+        self.assertEqual(
+            hard_extended_due_date.replace(second=0, microsecond=0),
+            group.hard_extended_due_date)
+
+
+class HardAndSoftExtendedDueDateTestCase(_SetUp):
+    def test_valid_soft_extended_due_date_None_hard_extended_due_date_not_None(self):
+        hard_extended_due_date = timezone.now() + datetime.timedelta(days=1)
+        group = ag_models.Group.objects.validate_and_create(
+            members=self.student_users,
+            project=self.project,
+            hard_extended_due_date=hard_extended_due_date,
+            soft_extended_due_date=None)
+
+        group.refresh_from_db()
+        self.assertEqual(
+            hard_extended_due_date.replace(second=0, microsecond=0),
+            group.hard_extended_due_date)
+        self.assertIsNone(group.soft_extended_due_date)
+
+    def test_error_soft_extended_due_date_after_hard_extended_due_date(self):
+        hard_extended_due_date = timezone.now() + timezone.timedelta(minutes=5)
+        soft_extended_due_date = hard_extended_due_date + timezone.timedelta(minutes=5)
+
+        with self.assertRaises(exceptions.ValidationError) as cm:
+            ag_models.Group.objects.validate_and_create(
+                members=self.student_users,
+                project=self.project,
+                hard_extended_due_date=hard_extended_due_date,
+                soft_extended_due_date=soft_extended_due_date)
+        self.assertIn('hard_extended_due_date', cm.exception.message_dict)

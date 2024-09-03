@@ -5560,7 +5560,12 @@ components:
           type: string
           format: date-time
         extended_due_date:
-          description: ''
+          description: "DEPRECATED. For API legacy use, you can continue to use this\
+            \ field as usual.\n        Do NOT mix usage of this field and the two\
+            \ new \"hard_extended_due_date\" and\n        \"soft_extended_due_date\"\
+            \ fields.\n\n        When this field is set, it indicates that members\
+            \ of this submission group can\n        submit until this specified date,\
+            \ overriding the project closing time.\n\n        Default value: None"
           nullable: true
           type: unknown
         member_names:
@@ -5642,7 +5647,12 @@ components:
           items:
             type: string
         extended_due_date:
-          description: ''
+          description: "DEPRECATED. For API legacy use, you can continue to use this\
+            \ field as usual.\n        Do NOT mix usage of this field and the two\
+            \ new \"hard_extended_due_date\" and\n        \"soft_extended_due_date\"\
+            \ fields.\n\n        When this field is set, it indicates that members\
+            \ of this submission group can\n        submit until this specified date,\
+            \ overriding the project closing time.\n\n        Default value: None"
           nullable: true
           type: unknown
         hard_extended_due_date:

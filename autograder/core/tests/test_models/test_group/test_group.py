@@ -691,13 +691,14 @@ class HardAndSoftExtendedDueDateTestCase(_SetUp):
             group.hard_extended_due_date)
         self.assertIsNone(group.soft_extended_due_date)
 
-    def test_error_soft_extended_due_date_after_extended_due_date(self):
+    def test_error_soft_extended_due_date_after_hard_extended_due_date(self):
         hard_extended_due_date = timezone.now() + timezone.timedelta(minutes=5)
         soft_extended_due_date = hard_extended_due_date + timezone.timedelta(minutes=5)
 
-        with self.assertRaises(exceptions.ValidationError):
+        with self.assertRaises(exceptions.ValidationError) as cm:
             ag_models.Group.objects.validate_and_create(
                 members=self.student_users,
                 project=self.project,
                 hard_extended_due_date=hard_extended_due_date,
                 soft_extended_due_date=soft_extended_due_date)
+        self.assertIn('hard_extended_due_date', cm.exception.message_dict)

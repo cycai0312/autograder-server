@@ -96,6 +96,16 @@ class Group(ag_model_base.AutograderModel):
 
     @property
     def extended_due_date(self) -> Optional[datetime]:
+        """
+        DEPRECATED. For API legacy use, you can continue to use this field as usual.
+        Do NOT mix usage of this field and the two new "hard_extended_due_date" and
+        "soft_extended_due_date" fields.
+
+        When this field is set, it indicates that members of this submission group can
+        submit until this specified date, overriding the project closing time.
+
+        Default value: None
+        """
         return self.soft_extended_due_date
 
     @extended_due_date.setter

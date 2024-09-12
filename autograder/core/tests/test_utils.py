@@ -1,3 +1,4 @@
+import copy
 import datetime
 import os
 import tempfile
@@ -12,6 +13,52 @@ import autograder.core.utils as core_ut
 import autograder.utils.testing.model_obj_builders as obj_build
 from autograder.core import constants
 from autograder.utils.testing import UnitTestBase
+
+
+class DateTimesAreEqualTest(UnitTestBase):
+    def test_equal_datetimes(self):
+        now = datetime.datetime.now()
+        now2 = copy.deepcopy(now)
+        self.assertTrue(core_ut.datetimes_are_equal(now, now2))
+        self.assertTrue(core_ut.datetimes_are_equal(now2, now))
+
+    def test_unequal_datetimes(self):
+        now = datetime.datetime.now()
+        later = now + datetime.timedelta(minutes=5)
+        self.assertFalse(core_ut.datetimes_are_equal(now, later))
+        self.assertFalse(core_ut.datetimes_are_equal(later, now))
+
+    def test_equal_strings(self):
+        time1 = '2024-09-12 17:52:05.538324+00:00'
+        time2 = '2024-09-12 17:52:05.538324Z'
+        self.assertTrue(core_ut.datetimes_are_equal(time1, time2))
+        self.assertTrue(core_ut.datetimes_are_equal(time2, time1))
+        self.assertTrue(core_ut.datetimes_are_equal(time1, time1))
+
+    def test_unequal_strings(self):
+        time1 = '2025-09-12 17:52:05.538324+00:00'
+        time2 = '2024-09-12 17:52:05.538324Z'
+        self.assertFalse(core_ut.datetimes_are_equal(time1, time2))
+        self.assertFalse(core_ut.datetimes_are_equal(time2, time1))
+
+    def test_none(self):
+        time1 = None
+        time2 = datetime.datetime.now()
+        self.assertTrue(core_ut.datetimes_are_equal(time1, time1))
+        self.assertFalse(core_ut.datetimes_are_equal(time1, time2))
+        self.assertFalse(core_ut.datetimes_are_equal(time2, time1))
+
+    def test_mixed_equal(self):
+        time1 = datetime.datetime.now()
+        time2 = time1.isoformat()
+        self.assertTrue(core_ut.datetimes_are_equal(time1, time2))
+        self.assertTrue(core_ut.datetimes_are_equal(time2, time1))
+
+    def test_mixed_unequal(self):
+        now = datetime.datetime.now()
+        later = (now + datetime.timedelta(minutes=5)).isoformat()
+        self.assertFalse(core_ut.datetimes_are_equal(now, later))
+        self.assertFalse(core_ut.datetimes_are_equal(later, now))
 
 
 class DiffTestCase(SimpleTestCase):

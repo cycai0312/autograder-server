@@ -4,6 +4,7 @@ import itertools
 import os
 import shutil
 import tempfile
+from typing import Mapping
 
 from django.contrib.auth.models import User
 from django.db import transaction
@@ -217,7 +218,7 @@ class GroupDetailView(SerializeGroupMixin, AGModelDetailView):
     def patch(self, request, *args, **kwargs):
         group = self.get_object()
 
-        update_data = clean_extended_due_dates(dict(request.data), group)
+        update_data = clean_extended_due_dates(request.data, group)
         if 'member_names' in update_data:
             users = [
                 User.objects.get_or_create(
@@ -387,7 +388,7 @@ class MergeGroupsView(AGModelAPIView):
         return max(group1.extended_due_date, group2.extended_due_date)
 
 
-def clean_extended_due_dates(update_data: dict, old_group: ag_models.Group) -> dict:
+def clean_extended_due_dates(update_data: Mapping, old_group: ag_models.Group) -> dict:
     """
     Return a new dict without 'soft_extended_due_date' and without 'hard_extended_due_date'
     if `update_data` contains a changed value for 'extended_due_date'. If it contains just
@@ -398,35 +399,36 @@ def clean_extended_due_dates(update_data: dict, old_group: ag_models.Group) -> d
              both deprecated 'extended_due_date' and one of 'soft_extended_due_date' or
              'hard_extended_due_date', or if any datetime strings in `update_data` are invalid.
     """
-    legacy_changed = current_changed = False
+    update_data = dict(copy.deepcopy(update_data))
+
     try:
-        if ('extended_due_date' in update_data and not core_ut.datetimes_are_equal(
-                update_data['extended_due_date'], old_group.extended_due_date)):
-            legacy_changed = True
+        legacy_changed = 'extended_due_date' in update_data \
+            and not core_ut.datetimes_are_equal(update_data['extended_due_date'],
+                                                old_group.extended_due_date)
     except(ValueError) as e:
         raise exceptions.ValidationError({
             'extended_due_date': str(e)
         })
 
     try:
-        if ('soft_extended_due_date' in update_data and not core_ut.datetimes_are_equal(
-                update_data['soft_extended_due_date'], old_group.soft_extended_due_date)):
-            current_changed = True
+        soft_extension_changed = 'soft_extended_due_date' in update_data \
+            and not core_ut.datetimes_are_equal(update_data['soft_extended_due_date'],
+                                                old_group.soft_extended_due_date)
     except(ValueError) as e:
         raise exceptions.ValidationError({
             'soft_extended_due_date': str(e)
         })
 
     try:
-        if ('hard_extended_due_date' in update_data and not core_ut.datetimes_are_equal(
-                update_data['hard_extended_due_date'], old_group.hard_extended_due_date)):
-            current_changed = True
+        hard_extension_changed = 'hard_extended_due_date' in update_data \
+            and not core_ut.datetimes_are_equal(update_data['hard_extended_due_date'],
+                                                old_group.hard_extended_due_date)
     except(ValueError) as e:
         raise exceptions.ValidationError({
             'hard_extended_due_date': str(e)
         })
 
-    if legacy_changed and current_changed:
+    if legacy_changed and (soft_extension_changed or hard_extension_changed):
         raise exceptions.ValidationError({
             'extended_due_date': (
                 'Extended due date is deprecated and may not be used along with soft and'
@@ -434,16 +436,12 @@ def clean_extended_due_dates(update_data: dict, old_group: ag_models.Group) -> d
         })
 
     elif legacy_changed:
-        return _deepcopy_dict_without_fields(update_data, 'soft_extended_due_date',
-                                             'hard_extended_due_date')
-    elif current_changed:
-        return _deepcopy_dict_without_fields(update_data, 'extended_due_date')
-    else:
-        return _deepcopy_dict_without_fields(update_data)
+        if 'soft_extended_due_date' in update_data:
+            update_data.pop('soft_extended_due_date')
+        if 'hard_extended_due_date' in update_data:
+            update_data.pop('hard_extended_due_date')
+    elif soft_extension_changed or hard_extension_changed:
+        if 'extended_due_date' in update_data:
+            update_data.pop('extended_due_date')
 
-
-def _deepcopy_dict_without_fields(dict_to_copy: dict, *keys: str) -> dict:
-    return {
-        key: copy.deepcopy(dict_to_copy[key]) for key in dict_to_copy
-        if key not in keys
-    }
+    return update_data

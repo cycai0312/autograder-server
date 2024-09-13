@@ -60,6 +60,16 @@ class DateTimesAreEqualTest(UnitTestBase):
         self.assertFalse(core_ut.datetimes_are_equal(now, later))
         self.assertFalse(core_ut.datetimes_are_equal(later, now))
 
+    def test_invalid_string(self):
+        now = datetime.datetime.now()
+        invalid = "invalid"
+        with self.assertRaises(ValueError):
+            core_ut.datetimes_are_equal(now, invalid)
+        with self.assertRaises(ValueError):
+            core_ut.datetimes_are_equal(invalid, now)
+        with self.assertRaises(ValueError):
+            core_ut.datetimes_are_equal(invalid, invalid)
+
 
 class DiffTestCase(SimpleTestCase):
     def setUp(self):

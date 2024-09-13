@@ -23,35 +23,35 @@ if typing.TYPE_CHECKING:
     from .models.submission import Submission
 
 
-def datetimes_are_equal(time1: datetime.datetime | str | None,
-                        time2: datetime.datetime | str | None) -> bool:
+def datetimes_are_equal(datetime1: datetime.datetime | str | None,
+                        datetime2: datetime.datetime | str | None) -> bool:
     """
-    Returns true if time1 is equal to time2. Each argument may be either a `datetime.datetime`
-    object, a valid ISO formatted string, or `None`.
+    Returns true if datetime1 is equal to datetime2. Each argument may be either a
+    `datetime.datetime` object, a valid ISO formatted string, or `None`.
 
     :raises: ValueError when either argument is an invalid datetime string.
     """
     # need to do these checks because parse_datetime returns None when passed
     # an invalid string.
-    if time1 is None and time2 is not None:
+    if datetime1 is None and datetime2 is not None:
         return False
-    elif time1 is not None and time2 is None:
+    elif datetime1 is not None and datetime2 is None:
         return False
-    elif time1 is None and time2 is None:
+    elif datetime1 is None and datetime2 is None:
         return True
 
-    if isinstance(time1, str):
-        time1_parsed = parse_datetime(time1)
+    if isinstance(datetime1, str):
+        time1_parsed = parse_datetime(datetime1)
         if time1_parsed is None:
-            raise ValueError(f"{time1} is not a valid time")
-        time1 = time1_parsed
-    if isinstance(time2, str):
-        time2_parsed = parse_datetime(time2)
+            raise ValueError(f"{datetime1} is not a valid datetime")
+        datetime1 = time1_parsed
+    if isinstance(datetime2, str):
+        time2_parsed = parse_datetime(datetime2)
         if time2_parsed is None:
-            raise ValueError(f"{time2} is not a valid time")
-        time2 = time2_parsed
+            raise ValueError(f"{datetime2} is not a valid datetime")
+        datetime2 = time2_parsed
 
-    return time1 == time2
+    return datetime1 == datetime2
 
 
 class InvalidSoftDeadlineError(Exception):

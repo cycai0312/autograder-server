@@ -428,6 +428,163 @@ class RetrieveGroupTestCase(AGViewTestBase):
         return reverse('group-detail', kwargs={'pk': group.pk})
 
 
+class UpdateGroupExtendedDueDatesTestCase(AGViewTestBase):
+    def setUp(self):
+        super().setUp()
+        self.new_due_date = timezone.now()
+
+        self.client = APIClient()
+        self.project = obj_build.make_project()
+        self.course = self.project.course
+        self.admin = obj_build.make_admin_user(self.course)
+
+    def test_admin_update_group_deprecated_extended_due_date(self):
+        group = obj_build.make_group(project=self.project)
+
+        invalid_extended_due_date = "not a date"
+        response = self.do_patch_object_invalid_args_test(
+            group, self.client, self.admin, self.group_url(group),
+            {'extended_due_date': invalid_extended_due_date})
+        self.assertIn('soft_extended_due_date', response.data)
+
+        self.do_patch_object_test(
+            group, self.client, self.admin, self.group_url(group),
+            {
+                'extended_due_date': self.new_due_date,
+                'soft_extended_due_date': group.soft_extended_due_date,
+                'hard_extended_due_date': group.hard_extended_due_date
+            },
+            expected_response_overrides={
+                'extended_due_date': self.new_due_date.replace(second=0, microsecond=0),
+                'soft_extended_due_date': self.new_due_date.replace(second=0, microsecond=0),
+                'hard_extended_due_date': self.new_due_date.replace(second=0, microsecond=0)
+            })
+        self.do_patch_object_test(
+            group, self.client, self.admin, self.group_url(group),
+            {'extended_due_date': None})
+
+    def test_admin_update_deprecated_extended_due_date_mixed_use(self):
+        group = obj_build.make_group(project=self.project)
+
+        self.do_patch_object_invalid_args_test(
+            group, self.client, self.admin, self.group_url(group),
+            {
+                'extended_due_date': self.new_due_date,
+                'soft_extended_due_date': self.new_due_date
+            })
+
+        self.do_patch_object_invalid_args_test(
+            group, self.client, self.admin, self.group_url(group),
+            {
+                'extended_due_date': self.new_due_date,
+                'hard_extended_due_date': self.new_due_date
+            })
+
+        self.do_patch_object_invalid_args_test(
+            group, self.client, self.admin, self.group_url(group),
+            {
+                'extended_due_date': self.new_due_date,
+                'soft_extended_due_date': self.new_due_date,
+                'hard_extended_due_date': self.new_due_date
+            })
+
+    def test_admin_update_soft_extended_due_date(self):
+        group = obj_build.make_group(
+            project=self.project, hard_extended_due_date=self.new_due_date)
+
+        invalid_soft_extended_due_date = "not a date"
+        response = self.do_patch_object_invalid_args_test(
+            group, self.client, self.admin, self.group_url(group),
+            {'soft_extended_due_date': invalid_soft_extended_due_date})
+        self.assertIn('soft_extended_due_date', response.data)
+
+        # soft_extended_due_date can't be later than hard_extended_due_date
+        invalid_soft_extended_due_date = self.new_due_date + datetime.timedelta(days=1)
+        response = self.do_patch_object_invalid_args_test(
+            group, self.client, self.admin, self.group_url(group),
+            {'soft_extended_due_date': invalid_soft_extended_due_date})
+        self.assertIn('hard_extended_due_date', response.data)
+
+        valid_soft_extended_due_date = self.new_due_date - datetime.timedelta(days=1)
+        self.do_patch_object_test(
+            group, self.client, self.admin, self.group_url(group),
+            {
+                'hard_extended_due_date': group.hard_extended_due_date,
+                'soft_extended_due_date': valid_soft_extended_due_date,
+                'extended_due_date': group.extended_due_date
+            },
+            expected_response_overrides={
+                'soft_extended_due_date': valid_soft_extended_due_date.replace(
+                    second=0, microsecond=0),
+                # setting soft_extended_due_date will also set extended_due_date
+                # for backwards compatibility
+                'extended_due_date': valid_soft_extended_due_date.replace(
+                    second=0, microsecond=0)
+            })
+
+    def test_admin_update_hard_extended_due_date(self):
+        group = obj_build.make_group(
+            project=self.project, soft_extended_due_date=self.new_due_date)
+
+        invalid_hard_extended_due_date = "not a date"
+        response = self.do_patch_object_invalid_args_test(
+            group, self.client, self.admin, self.group_url(group),
+            {'hard_extended_due_date': invalid_hard_extended_due_date})
+        self.assertIn('hard_extended_due_date', response.data)
+
+        # hard_extended_due_date can't be before soft_extended_due_date
+        invalid_hard_extended_due_date = self.new_due_date - datetime.timedelta(days=1)
+        response = self.do_patch_object_invalid_args_test(
+            group, self.client, self.admin, self.group_url(group),
+            {'hard_extended_due_date': invalid_hard_extended_due_date})
+        self.assertIn('hard_extended_due_date', response.data)
+
+        valid_hard_extended_due_date = self.new_due_date + datetime.timedelta(days=1)
+        self.do_patch_object_test(
+            group, self.client, self.admin, self.group_url(group),
+            {
+                'hard_extended_due_date': valid_hard_extended_due_date,
+                'soft_extended_due_date': group.soft_extended_due_date,
+                'extended_due_date': group.extended_due_date
+            },
+            expected_response_overrides={
+                'hard_extended_due_date': valid_hard_extended_due_date.replace(
+                    second=0, microsecond=0),
+                # extended_due_date is deprecated but should reflect soft_extended_deadline
+                'extended_due_date': self.new_due_date.replace(
+                    second=0, microsecond=0)
+            })
+
+    def test_admin_update_soft_and_hard_extended_deadlines(self):
+        group = obj_build.make_group(project=self.project)
+        later = self.new_due_date + datetime.timedelta(days=1)
+        response = self.do_patch_object_invalid_args_test(
+            group, self.client, self.admin, self.group_url(group),
+            {
+                'hard_extended_due_date': self.new_due_date,
+                'soft_extended_due_date': later,
+                'extended_due_date': group.extended_due_date
+            })
+        self.assertIn('hard_extended_due_date', response.data)
+
+        self.do_patch_object_test(
+            group, self.client, self.admin, self.group_url(group),
+            {
+                'soft_extended_due_date': self.new_due_date,
+                'hard_extended_due_date': later,
+                'extended_due_date': group.extended_due_date
+            },
+            expected_response_overrides={
+                'soft_extended_due_date': self.new_due_date.replace(second=0, microsecond=0),
+                'hard_extended_due_date': later.replace(second=0, microsecond=0),
+                'extended_due_date': self.new_due_date.replace(second=0, microsecond=0)
+
+            })
+
+    def group_url(self, group: ag_models.Group) -> str:
+        return reverse('group-detail', kwargs={'pk': group.pk})
+
+
 class UpdateGroupTestCase(AGViewTestBase):
     def setUp(self):
         super().setUp()
@@ -480,96 +637,6 @@ class UpdateGroupTestCase(AGViewTestBase):
         self.assertGreater(len(new_members), self.project.max_group_size)
         self.assertCountEqual(
             [serialize_user(user) for user in new_members], response.data['members'])
-
-    def test_admin_update_group_deprecated_extended_due_date(self):
-        group = obj_build.make_group(project=self.project)
-
-        invalid_extended_due_date = "not a date"
-        response = self.do_patch_object_invalid_args_test(
-            group, self.client, self.admin, self.group_url(group),
-            {'extended_due_date': invalid_extended_due_date})
-        self.assertIn('soft_extended_due_date', response.data)
-
-        self.do_patch_object_test(
-            group, self.client, self.admin, self.group_url(group),
-            {
-                'extended_due_date': self.new_due_date,
-                'soft_extended_due_date': group.soft_extended_due_date,
-                'hard_extended_due_date': group.hard_extended_due_date
-            },
-            expected_response_overrides={
-                'extended_due_date': self.new_due_date.replace(second=0, microsecond=0),
-                'soft_extended_due_date': self.new_due_date.replace(second=0, microsecond=0),
-                'hard_extended_due_date': self.new_due_date.replace(second=0, microsecond=0)
-            })
-        self.do_patch_object_test(
-            group, self.client, self.admin, self.group_url(group),
-            {'extended_due_date': None})
-
-    def test_admin_update_soft_extended_due_date(self):
-        group = obj_build.make_group(
-            project=self.project, hard_extended_due_date=self.new_due_date)
-
-        invalid_soft_extended_due_date = "not a date"
-        response = self.do_patch_object_invalid_args_test(
-            group, self.client, self.admin, self.group_url(group),
-            {'soft_extended_due_date': invalid_soft_extended_due_date})
-        self.assertIn('soft_extended_due_date', response.data)
-
-        # soft_extended_due_date can't be later than hard_extended_due_date
-        invalid_soft_extended_due_date = self.new_due_date + datetime.timedelta(days=1)
-        response = self.do_patch_object_invalid_args_test(
-            group, self.client, self.admin, self.group_url(group),
-            {'soft_extended_due_date': invalid_soft_extended_due_date})
-        self.assertIn('hard_extended_due_date', response.data)
-
-        valid_soft_extended_due_date = self.new_due_date - datetime.timedelta(days=1)
-        self.do_patch_object_test(
-            group, self.client, self.admin, self.group_url(group),
-            {
-                'soft_extended_due_date': valid_soft_extended_due_date,
-                'extended_due_date': group.extended_due_date
-            },
-            expected_response_overrides={
-                'soft_extended_due_date': valid_soft_extended_due_date.replace(
-                    second=0, microsecond=0),
-                # setting soft_extended_due_date will also set extended_due_date
-                # for backwards compatibility
-                'extended_due_date': valid_soft_extended_due_date.replace(
-                    second=0, microsecond=0)
-            })
-
-    def test_admin_update_hard_extended_due_date(self):
-        group = obj_build.make_group(
-            project=self.project, soft_extended_due_date=self.new_due_date)
-
-        invalid_hard_extended_due_date = "not a date"
-        response = self.do_patch_object_invalid_args_test(
-            group, self.client, self.admin, self.group_url(group),
-            {'hard_extended_due_date': invalid_hard_extended_due_date})
-        self.assertIn('hard_extended_due_date', response.data)
-
-        # hard_extended_due_date can't be before soft_extended_due_date
-        invalid_hard_extended_due_date = self.new_due_date - datetime.timedelta(days=1)
-        response = self.do_patch_object_invalid_args_test(
-            group, self.client, self.admin, self.group_url(group),
-            {'hard_extended_due_date': invalid_hard_extended_due_date})
-        self.assertIn('hard_extended_due_date', response.data)
-
-        valid_hard_extended_due_date = self.new_due_date + datetime.timedelta(days=1)
-        self.do_patch_object_test(
-            group, self.client, self.admin, self.group_url(group),
-            {
-                'hard_extended_due_date': valid_hard_extended_due_date,
-                'extended_due_date': group.extended_due_date
-            },
-            expected_response_overrides={
-                'hard_extended_due_date': valid_hard_extended_due_date.replace(
-                    second=0, microsecond=0),
-                # extended_due_date is deprecated but should reflect soft_extended_deadline
-                'extended_due_date': self.new_due_date.replace(
-                    second=0, microsecond=0)
-            })
 
     def test_admin_update_group_invalid_members(self):
         group = obj_build.make_group(project=self.project)
@@ -804,66 +871,3 @@ class DeleteGroupTestCase(AGViewTestBase):
 
         self.group = ag_models.Group.objects.get(pk=self.group.pk)
         self.assertEqual(original_member_names, self.group.member_names)
-
-
-class CleanExtendedDueDatesTests(UnitTestBase):
-    def setUp(self):
-        super().setUp()
-        self.group = obj_build.make_group()
-        self.new_time = '2020-09-12 17:52:05.538324Z'
-
-    def test_mixed_use_deprecated_extended_due_date(self) -> None:
-        update_data = {
-            'extended_due_date': self.new_time,
-            'soft_extended_due_date': self.new_time,
-            'foo': 'bar'
-        }
-        with self.assertRaises(exceptions.ValidationError) as cm:
-            _ = clean_extended_due_dates(update_data, self.group)
-        self.assertIn('extended_due_date', cm.exception.detail)
-
-        update_data = {'extended_due_date': self.new_time, 'hard_extended_due_date': self.new_time}
-        with self.assertRaises(exceptions.ValidationError) as cm:
-            _ = clean_extended_due_dates(update_data, self.group)
-        self.assertIn('extended_due_date', cm.exception.detail)
-
-    def test_updated_deprecated_extended_due_date(self) -> None:
-        update_data = {
-            'extended_due_date': self.new_time,
-            'soft_extended_due_date': self.group.soft_extended_due_date,
-            'hard_extended_due_date': self.group.hard_extended_due_date,
-            'foo': 'bar'
-        }
-        new_update_data = clean_extended_due_dates(update_data, self.group)
-        expected_new_update_data = {'extended_due_date': self.new_time, 'foo': 'bar'}
-        self.assertEqual(new_update_data, expected_new_update_data)
-
-    def test_updated_soft_extended_due_date(self) -> None:
-        update_data = {
-            'extended_due_date': self.group.extended_due_date,
-            'soft_extended_due_date': self.new_time,
-            'hard_extended_due_date': self.group.hard_extended_due_date,
-            'foo': 'bar'
-        }
-        new_update_data = clean_extended_due_dates(update_data, self.group)
-        expected_new_update_data = {
-            'soft_extended_due_date': self.new_time,
-            'hard_extended_due_date': self.group.hard_extended_due_date,
-            'foo': 'bar'
-        }
-        self.assertEqual(new_update_data, expected_new_update_data)
-
-    def test_updated_hard_extended_due_date(self) -> None:
-        update_data = {
-            'extended_due_date': self.group.extended_due_date,
-            'soft_extended_due_date': self.group.soft_extended_due_date,
-            'hard_extended_due_date': self.new_time,
-            'foo': 'bar'
-        }
-        new_update_data = clean_extended_due_dates(update_data, self.group)
-        expected_new_update_data = {
-            'soft_extended_due_date': self.group.soft_extended_due_date,
-            'hard_extended_due_date': self.new_time,
-            'foo': 'bar'
-        }
-        self.assertEqual(new_update_data, expected_new_update_data)

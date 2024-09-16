@@ -31,25 +31,15 @@ def datetimes_are_equal(datetime1: datetime.datetime | str | None,
 
     :raises: ValueError when either argument is an invalid datetime string.
     """
-    # need to do these checks because parse_datetime returns None when passed
-    # an invalid string.
-    if datetime1 is None and datetime2 is not None:
-        return False
-    elif datetime1 is not None and datetime2 is None:
-        return False
-    elif datetime1 is None and datetime2 is None:
-        return True
-
     if isinstance(datetime1, str):
-        time1_parsed = parse_datetime(datetime1)
-        if time1_parsed is None:
+        datetime1 = parse_datetime(datetime1)
+        if datetime1 is None:
             raise ValueError(f"{datetime1} is not a valid datetime")
-        datetime1 = time1_parsed
+
     if isinstance(datetime2, str):
-        time2_parsed = parse_datetime(datetime2)
-        if time2_parsed is None:
-            raise ValueError(f"{datetime2} is not a valid datetime")
-        datetime2 = time2_parsed
+        datetime2 = parse_datetime(datetime2)
+        if datetime2 is None:
+            raise ValueError(f"{datetime1} is not a valid datetime")
 
     return datetime1 == datetime2
 

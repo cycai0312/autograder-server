@@ -400,7 +400,6 @@ def clean_extended_due_dates(update_data: Mapping, old_group: ag_models.Group) -
              'hard_extended_due_date', or if any datetime strings in `update_data` are invalid.
     """
     update_data = dict(copy.deepcopy(update_data))
-
     try:
         legacy_changed = 'extended_due_date' in update_data \
             and not core_ut.datetimes_are_equal(update_data['extended_due_date'],

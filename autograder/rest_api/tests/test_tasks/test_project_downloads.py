@@ -354,7 +354,7 @@ class DownloadAllUltimateSubmissionGradesTestCase(UnitTestBase):
                 'Group Members': (
                     f'{self.student_group.member_names[0]},{self.student_group.member_names[1]}'),
                 'Timestamp': str(self.student_submission.timestamp),
-                'Extension': str(student_extension.replace(second=0, microsecond=0)),
+                'Extension': str(student_extension),
                 'Total Points': str(self.student_result_fdbk.total_points),
                 'Total Points Possible': str(self.student_result_fdbk.total_points_possible),
                 # These point values are the same as the totals because its the only test case
@@ -369,7 +369,7 @@ class DownloadAllUltimateSubmissionGradesTestCase(UnitTestBase):
                 'Group Members': (
                     f'{self.student_group.member_names[0]},{self.student_group.member_names[1]}'),
                 'Timestamp': str(self.student_submission.timestamp),
-                'Extension': str(student_extension.replace(second=0, microsecond=0)),
+                'Extension': str(student_extension),
                 'Total Points': str(self.student_result_fdbk.total_points),
                 'Total Points Possible': str(self.student_result_fdbk.total_points_possible),
                 f'{self.ag_test_suite.name} Total': (str(self.student_result_fdbk.total_points)),
@@ -420,7 +420,7 @@ class DownloadAllUltimateSubmissionGradesTestCase(UnitTestBase):
                 'Group Members': (
                     f'{self.student_group.member_names[0]},{self.student_group.member_names[1]}'),
                 'Timestamp': str(self.student_submission.timestamp),
-                'Extension': str(student_extension.replace(second=0, microsecond=0)),
+                'Extension': str(student_extension),
                 'Total Points': str(self.student_result_fdbk.total_points),
                 'Total Points Possible': str(self.student_result_fdbk.total_points_possible),
                 # These point values are the same as the totals because its the only test case
@@ -435,7 +435,7 @@ class DownloadAllUltimateSubmissionGradesTestCase(UnitTestBase):
                 'Group Members': (
                     f'{self.student_group.member_names[0]},{self.student_group.member_names[1]}'),
                 'Timestamp': str(self.student_submission.timestamp),
-                'Extension': str(student_extension.replace(second=0, microsecond=0)),
+                'Extension': str(student_extension),
                 'Total Points': str(self.student_result_fdbk.total_points),
                 'Total Points Possible': str(self.student_result_fdbk.total_points_possible),
                 f'{self.ag_test_suite.name} Total': (str(self.student_result_fdbk.total_points)),

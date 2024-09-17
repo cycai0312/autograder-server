@@ -1,8 +1,8 @@
 import datetime
-from typing import List, Dict
+from typing import List
 from unittest import mock
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.utils import timezone
@@ -66,12 +66,8 @@ class ListGroupsTestCase(AGViewTestBase):
 
     def test_staff_list_groups(self):
         staff = obj_build.make_staff_user(self.project.course)
-        groups = self.build_groups(self.project)
-        for group in groups:
-            group.pop('hard_extended_due_date', None)
-
         self.do_list_objects_test(
-            self.client, staff, self.url, groups, check_order=True)
+            self.client, staff, self.url, self.build_groups(self.project), check_order=True)
 
     def test_student_list_groups_permission_denied(self):
         self.project.validate_and_update(visible_to_students=True)
@@ -81,12 +77,8 @@ class ListGroupsTestCase(AGViewTestBase):
 
     def test_handgrader_list_groups(self):
         handgrader = obj_build.make_handgrader_user(self.course)
-        groups = self.build_groups(self.project)
-        for group in groups:
-            group.pop('hard_extended_due_date', None)
-
         self.do_list_objects_test(
-            self.client, handgrader, self.url, groups)
+            self.client, handgrader, self.url, self.build_groups(self.project))
 
     def test_guest_list_groups_permission_denied(self):
         self.project.validate_and_update(visible_to_students=True, guests_can_submit=True)
@@ -323,48 +315,32 @@ class RetrieveGroupTestCase(AGViewTestBase):
         admin = obj_build.make_admin_user(self.course)
         staff = obj_build.make_staff_user(self.course)
 
-        def expected_data(group):
-            data = group.to_dict()
-            if user is staff:
-                data.pop("hard_extended_due_date", None)
-            return data
-
         for user in admin, staff:
             student_group = obj_build.make_group(project=self.project)
             self.do_get_object_test(
-                self.client, user, self.group_url(student_group), expected_data(student_group))
+                self.client, user, self.group_url(student_group), student_group.to_dict())
 
             guest_group = obj_build.make_group(
                 project=self.project, members_role=obj_build.UserRole.guest)
             self.do_get_object_test(
-                self.client, user, self.group_url(guest_group), expected_data(guest_group))
+                self.client, user, self.group_url(guest_group), guest_group.to_dict())
 
             admin_group = obj_build.make_group(
                 project=self.project, members_role=obj_build.UserRole.admin)
             self.do_get_object_test(
-                self.client, user, self.group_url(admin_group), expected_data(admin_group))
+                self.client, user, self.group_url(admin_group), admin_group.to_dict())
 
     def test_student_get_group(self):
         self.project.validate_and_update(visible_to_students=True)
         group = obj_build.make_group(project=self.project)
-
-        # students shouldn't see hard extended due date
-        expected_data = group.to_dict()
-        expected_data.pop("hard_extended_due_date", None)
-
         self.do_get_object_test(
-            self.client, group.members.first(), self.group_url(group), expected_data)
+            self.client, group.members.first(), self.group_url(group), group.to_dict())
 
     def test_guest_get_group(self):
         self.project.validate_and_update(visible_to_students=True, guests_can_submit=True)
         group = obj_build.make_group(project=self.project, members_role=obj_build.UserRole.guest)
-
-        # guests shouldn't see hard extended due date
-        expected_data = group.to_dict()
-        expected_data.pop("hard_extended_due_date", None)
-
         self.do_get_object_test(
-            self.client, group.members.first(), self.group_url(group), expected_data)
+            self.client, group.members.first(), self.group_url(group), group.to_dict())
 
     def test_non_member_get_group_permission_denied(self):
         self.project.validate_and_update(visible_to_students=True)
@@ -430,7 +406,7 @@ class RetrieveGroupTestCase(AGViewTestBase):
 class UpdateGroupTestCase(AGViewTestBase):
     def setUp(self):
         super().setUp()
-        self.new_due_date = timezone.now()
+        self.new_due_date = timezone.now().replace(microsecond=0)
 
         self.client = APIClient()
         self.project = obj_build.make_project()
@@ -480,85 +456,14 @@ class UpdateGroupTestCase(AGViewTestBase):
         self.assertCountEqual(
             [serialize_user(user) for user in new_members], response.data['members'])
 
-    def test_admin_update_group_deprecated_extended_due_date(self):
+    def test_admin_update_group_extension(self):
         group = obj_build.make_group(project=self.project)
-
-        invalid_extended_due_date = "not a date"
-        response = self.do_patch_object_invalid_args_test(
-            group, self.client, self.admin, self.group_url(group),
-            {'extended_due_date': invalid_extended_due_date})
-        self.assertIn('soft_extended_due_date', response.data)
-
         self.do_patch_object_test(
             group, self.client, self.admin, self.group_url(group),
-            {'extended_due_date': self.new_due_date},
-            expected_response_overrides={
-                'extended_due_date': self.new_due_date.replace(second=0, microsecond=0),
-                'soft_extended_due_date': self.new_due_date.replace(second=0, microsecond=0),
-                'hard_extended_due_date': self.new_due_date.replace(second=0, microsecond=0)
-            })
+            {'extended_due_date': self.new_due_date})
         self.do_patch_object_test(
             group, self.client, self.admin, self.group_url(group),
             {'extended_due_date': None})
-
-    def test_admin_update_soft_extended_due_date(self):
-        group = obj_build.make_group(
-            project=self.project, hard_extended_due_date=self.new_due_date)
-
-        invalid_soft_extended_due_date = "not a date"
-        response = self.do_patch_object_invalid_args_test(
-            group, self.client, self.admin, self.group_url(group),
-            {'soft_extended_due_date': invalid_soft_extended_due_date})
-        self.assertIn('soft_extended_due_date', response.data)
-
-        # soft_extended_due_date can't be later than hard_extended_due_date
-        invalid_soft_extended_due_date = self.new_due_date + datetime.timedelta(days=1)
-        response = self.do_patch_object_invalid_args_test(
-            group, self.client, self.admin, self.group_url(group),
-            {'soft_extended_due_date': invalid_soft_extended_due_date})
-        self.assertIn('hard_extended_due_date', response.data)
-
-        valid_soft_extended_due_date = self.new_due_date - datetime.timedelta(days=1)
-        self.do_patch_object_test(
-            group, self.client, self.admin, self.group_url(group),
-            {'soft_extended_due_date': valid_soft_extended_due_date},
-            expected_response_overrides={
-                'soft_extended_due_date': valid_soft_extended_due_date.replace(
-                    second=0, microsecond=0),
-                # setting soft_extended_due_date will also set extended_due_date
-                # for backwards compatibility
-                'extended_due_date': valid_soft_extended_due_date.replace(
-                    second=0, microsecond=0)
-            })
-
-    def test_admin_update_hard_extended_due_date(self):
-        group = obj_build.make_group(
-            project=self.project, soft_extended_due_date=self.new_due_date)
-
-        invalid_hard_extended_due_date = "not a date"
-        response = self.do_patch_object_invalid_args_test(
-            group, self.client, self.admin, self.group_url(group),
-            {'hard_extended_due_date': invalid_hard_extended_due_date})
-        self.assertIn('hard_extended_due_date', response.data)
-
-        # hard_extended_due_date can't be before soft_extended_due_date
-        invalid_hard_extended_due_date = self.new_due_date - datetime.timedelta(days=1)
-        response = self.do_patch_object_invalid_args_test(
-            group, self.client, self.admin, self.group_url(group),
-            {'hard_extended_due_date': invalid_hard_extended_due_date})
-        self.assertIn('hard_extended_due_date', response.data)
-
-        valid_hard_extended_due_date = self.new_due_date + datetime.timedelta(days=1)
-        self.do_patch_object_test(
-            group, self.client, self.admin, self.group_url(group),
-            {'hard_extended_due_date': valid_hard_extended_due_date},
-            expected_response_overrides={
-                'hard_extended_due_date': valid_hard_extended_due_date.replace(
-                    second=0, microsecond=0),
-                # extended_due_date is deprecated but should reflect soft_extended_deadline
-                'extended_due_date': self.new_due_date.replace(
-                    second=0, microsecond=0)
-            })
 
     def test_admin_update_group_invalid_members(self):
         group = obj_build.make_group(project=self.project)
@@ -583,6 +488,13 @@ class UpdateGroupTestCase(AGViewTestBase):
             group, self.client, self.admin, self.group_url(group),
             {'member_names': [allowed_guest.username, non_allowed_guest.username]})
         self.assertIn('members', response.data)
+
+    def test_admin_update_group_bad_date(self):
+        group = obj_build.make_group(project=self.project)
+        response = self.do_patch_object_invalid_args_test(
+            group, self.client, self.admin, self.group_url(group),
+            {'extended_due_date': 'not a date'})
+        self.assertIn('extended_due_date', response.data)
 
     def test_non_admin_update_group_permission_denied(self):
         group = obj_build.make_group(project=self.project)
@@ -671,9 +583,7 @@ class MergeGroupsTestCase(AGViewTestBase):
         self.group1.validate_and_update(extended_due_date=extension_date)
         response = self.client.post(self.get_merge_url(self.group1, self.group2))
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-        self.assertEqual(
-            response.data['extended_due_date'],
-            extension_date.replace(second=0, microsecond=0))
+        self.assertEqual(response.data['extended_due_date'], extension_date)
 
     def test_both_have_extension(self):
         earlier_extension_date = timezone.now()
@@ -683,8 +593,7 @@ class MergeGroupsTestCase(AGViewTestBase):
         self.client.force_authenticate(self.admin)
         response = self.client.post(self.get_merge_url(self.group1, self.group2))
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-        self.assertEqual(response.data['extended_due_date'],
-                         later_extension_date.replace(second=0, microsecond=0))
+        self.assertEqual(response.data['extended_due_date'], later_extension_date)
 
     def test_bonus_submission_merging(self) -> None:
         fewer_bonus_submissions = 1

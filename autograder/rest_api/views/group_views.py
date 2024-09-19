@@ -45,19 +45,11 @@ _MEMBER_NAMES_REQUEST_BODY: RequestBodyObject = {
 }
 
 
-class SerializeGroupMixin:
-    def serialize_object(self, obj: ag_models.Group) -> dict:
-        result = super().serialize_object(obj)
-        if not obj.project.course.is_admin(self.request.user):
-            result.pop('hard_extended_due_date', None)
-        return result
-
-
 class _ListCreateGroupSchema(AGListViewSchemaMixin, CustomViewSchema):
     pass
 
 
-class ListCreateGroupsView(SerializeGroupMixin, NestedModelView):
+class ListCreateGroupsView(NestedModelView):
     schema = _ListCreateGroupSchema([APITags.groups], api_class=ag_models.Group, data={
         'POST': {
             'operation_id': 'createGroup',
@@ -196,7 +188,7 @@ class _GroupDetailSchema(AGRetrieveViewSchemaMixin, AGPatchViewSchemaMixin, Cust
     pass
 
 
-class GroupDetailView(SerializeGroupMixin, AGModelDetailView):
+class GroupDetailView(AGModelDetailView):
     schema = _GroupDetailSchema([APITags.groups], {
         'DELETE': {'operation_id': 'pseudoDeleteGroup'}
     })

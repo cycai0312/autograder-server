@@ -5543,7 +5543,7 @@ components:
           description: ''
           nullable: false
           type: integer
-        hard_extended_due_date:
+        extended_due_date:
           description: "When this field is set, it indicates that members\n      \
             \      of this submission group can submit until this specified\n    \
             \        date, overriding the project closing time.\n            Default\
@@ -5551,23 +5551,6 @@ components:
           nullable: true
           type: string
           format: date-time
-        soft_extended_due_date:
-          description: "When this field is set, it indicates the extended due date\n\
-            \            that is visible to members of the group. Members of the group\
-            \ will\n            still be able to submit after this date but before\
-            \ the\n            extended_due_date.\n            Default value: None"
-          nullable: true
-          type: string
-          format: date-time
-        extended_due_date:
-          description: "DEPRECATED. For API legacy use, you can continue to use this\
-            \ field as usual.\n        Do NOT mix usage of this field and the two\
-            \ new \"hard_extended_due_date\" and\n        \"soft_extended_due_date\"\
-            \ fields.\n\n        When this field is set, it indicates that members\
-            \ of this submission group can\n        submit until this specified date,\
-            \ overriding the project closing time.\n\n        Default value: None"
-          nullable: true
-          type: unknown
         member_names:
           description: A list of usernames of the group members, sorted alphabetically.
           type: array
@@ -5617,8 +5600,6 @@ components:
       required:
       - pk
       - project
-      - hard_extended_due_date
-      - soft_extended_due_date
       - extended_due_date
       - member_names
       - members
@@ -5647,27 +5628,10 @@ components:
           items:
             type: string
         extended_due_date:
-          description: "DEPRECATED. For API legacy use, you can continue to use this\
-            \ field as usual.\n        Do NOT mix usage of this field and the two\
-            \ new \"hard_extended_due_date\" and\n        \"soft_extended_due_date\"\
-            \ fields.\n\n        When this field is set, it indicates that members\
-            \ of this submission group can\n        submit until this specified date,\
-            \ overriding the project closing time.\n\n        Default value: None"
-          nullable: true
-          type: unknown
-        hard_extended_due_date:
           description: "When this field is set, it indicates that members\n      \
             \      of this submission group can submit until this specified\n    \
             \        date, overriding the project closing time.\n            Default\
             \ value: None"
-          nullable: true
-          type: string
-          format: date-time
-        soft_extended_due_date:
-          description: "When this field is set, it indicates the extended due date\n\
-            \            that is visible to members of the group. Members of the group\
-            \ will\n            still be able to submit after this date but before\
-            \ the\n            extended_due_date.\n            Default value: None"
           nullable: true
           type: string
           format: date-time

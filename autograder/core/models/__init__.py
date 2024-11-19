@@ -19,7 +19,6 @@ from .ag_test.ag_test_suite import AGTestSuiteFeedbackConfig as AGTestSuiteFeedb
 from .ag_test.ag_test_suite_result import AGTestSuiteResult as AGTestSuiteResult
 from .ag_test.feedback_category import FeedbackCategory as FeedbackCategory
 from .course import Course as Course
-from .course import LateDaysRemaining as LateDaysRemaining
 from .course import Semester as Semester
 from .group import Group as Group
 from .group import GroupInvitation as GroupInvitation
@@ -43,3 +42,5 @@ from .submission import \
 from .submission import \
     get_submissions_with_results_queryset as get_submissions_with_results_queryset
 from .task import Task as Task
+from .user_late_days import LateDaysForUser as LateDaysForUser
+from .user_late_days import ExtraLateDays as ExtraLateDays

@@ -62,17 +62,29 @@ paths:
           description: ''
       tags:
       - users
-  /api/users/{username_or_pk}/late_days/:
+  /api/courses/{id}/users/{username_or_pk}/late_days/:
     get:
-      operationId: getUserLateDaysRemaining
+      operationId: getLateDays
       description: ''
       parameters:
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
       - name: username_or_pk
         in: path
         required: true
         description: ''
         schema:
           type: string
+      - name: pk
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: id
       - name: username_or_pk
         in: path
         required: true
@@ -83,37 +95,38 @@ paths:
             format: username
           - type: integer
             format: id
-      - name: course_pk
-        in: query
-        required: true
-        schema:
-          type: integer
-          format: id
       responses:
         '200':
           content:
             application/json:
               schema:
-                type: object
-                required:
-                - late_days_remaining
-                properties:
-                  late_days_remaining:
-                    type: integer
+                $ref: '#/components/schemas/LateDaysForUser'
           description: ''
       tags:
       - courses
       - users
-    put:
-      operationId: setUserLateDaysRemaining
+    patch:
+      operationId: putLateDays
       description: ''
       parameters:
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
       - name: username_or_pk
         in: path
         required: true
         description: ''
         schema:
           type: string
+      - name: pk
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: id
       - name: username_or_pk
         in: path
         required: true
@@ -124,38 +137,58 @@ paths:
             format: username
           - type: integer
             format: id
-      - name: course_pk
-        in: query
-        required: true
-        schema:
-          type: integer
-          format: id
       requestBody:
         content:
           application/json:
             schema:
               type: object
               required:
-              - late_days_remaining
+              - extra_late_days_granted
               properties:
-                late_days_remaining:
+                extra_late_days_granted:
                   type: integer
+        description: '
+
+          `extra_late_days_granted` + the number of late days set for the project
+          must be greater than or equal to `late_days_used`.
+
+
+          **Note:** the `late_days_used` field is a property computed from submission
+          data and can''t be changed.'
         required: true
       responses:
         '200':
           content:
             application/json:
               schema:
-                type: object
-                required:
-                - late_days_remaining
-                properties:
-                  late_days_remaining:
-                    type: integer
+                $ref: '#/components/schemas/LateDaysForUser'
           description: ''
       tags:
       - courses
       - users
+  /api/courses/{id}/late_days/:
+    get:
+      operationId: listLateDaysForUsers
+      description: ''
+      parameters:
+      - name: id
+        in: path
+        required: true
+        description: ''
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LateDaysForUser'
+          description: ''
+      tags:
+      - users
+      - courses
   /api/users/{id}/courses_is_admin_for/:
     get:
       operationId: coursesIsAdminFor
@@ -4717,6 +4750,28 @@ components:
       - first_name
       - last_name
       - is_superuser
+    LateDaysForUser:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        course:
+          $ref: '#/components/schemas/Course'
+        extra_late_days:
+          type: integer
+          description: ''
+        late_days_used:
+          type: integer
+          description: ''
+        late_days_remaining:
+          type: integer
+          description: ''
+      required:
+      - user
+      - course
+      - extra_late_days
+      - late_days_used
+      - late_days_remaining
     Course:
       type: object
       properties:

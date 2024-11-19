@@ -164,6 +164,7 @@ def api_object_type_name_is_registered(api_class: APIClassType) -> bool:
 
 _API_OBJ_TYPE_NAMES: Dict[APIClassType, str] = {
     User: 'User',
+    ag_models.LateDaysForUser: ag_models.LateDaysForUser.__name__,
     ag_models.Course: ag_models.Course.__name__,
     ag_models.Semester: ag_models.Semester.__name__,
     ag_models.Project: ag_models.Project.__name__,
@@ -253,6 +254,7 @@ _API_CREATE_OBJ_TYPE_NAMES: Dict[APIClassType, str] = {
 }
 
 _API_UPDATE_OBJ_TYPE_NAMES: Dict[APIClassType, str] = {
+    # ag_models.LateDays: 'Update' + ag_models.LateDays.__name__,
     ag_models.Course: 'Update' + ag_models.Course.__name__,
     ag_models.Project: 'Update' + ag_models.Project.__name__,
     ag_models.ExpectedStudentFile: 'Update' + ag_models.ExpectedStudentFile.__name__,

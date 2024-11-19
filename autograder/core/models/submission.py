@@ -126,7 +126,8 @@ class Submission(ag_model_base.AutograderModel):
     objects = _SubmissionManager()
 
     class Meta:
-        ordering = ['-pk']
+        ordering = ['-pk', '-timestamp']
+        indexes = [models.Index(fields=['group', 'timestamp'])]
 
     class GradingStatus(models.TextChoices):
         # The submission has been accepted and saved to the database

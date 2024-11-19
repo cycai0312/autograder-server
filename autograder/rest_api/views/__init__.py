@@ -65,4 +65,6 @@ from .user_views import (CoursesIsAdminForView, CoursesIsEnrolledInView,
                          CurrentUserCanCreateCoursesView, CurrentUserView,
                          GroupInvitationsReceivedView, GroupInvitationsSentView,
                          GroupsIsMemberOfView, RevokeCurrentUserAPITokenView,
-                         UserDetailView, UserLateDaysView)
+                         UserDetailView)
+from .user_late_days_views import (ListLateDaysForUserView, LateDaysView)
+

@@ -91,9 +91,13 @@ python3.10 generate_secrets.py
 ```
 
 ## Running the Unit Tests
-To run the tests (takes about 15 minutes on my machine):
+To run the tests (takes 15-60 minutes):
 ```
-./manage.py -v 2 test
+./manage.py test
+```
+To exclude the slowest test cases from the run:
+```
+./manage.py test --exclude-tag slow
 ```
 
 ## Updating schema.yml and Rendering the Schema

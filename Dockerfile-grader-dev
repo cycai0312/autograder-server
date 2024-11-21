@@ -8,6 +8,5 @@ RUN pip install pip-tools
 
 COPY ./requirements.txt .
 RUN pip-sync requirements.txt
-RUN pip install django-debug-toolbar==3.5.0
 
 WORKDIR /usr/src/app

@@ -25,7 +25,9 @@ urlpatterns = [
     url(r'^api/', include('autograder.mutant_hints.urls')),
 ]
 
-if settings.DEBUG:
+if settings.IS_DEV_SERVER:
+    import sys
+    print(sys.argv, flush=True)
     urlpatterns += [
         url(r'^static/(?P<path>.*)$', views.serve),
     ]

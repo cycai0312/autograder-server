@@ -29,8 +29,6 @@ class ExtraLateDays(AutograderModel):
 
     def clean(self):
         super().clean()
-        if self.user not in self.course.students.all():
-            raise ValidationError('The user is not a student in the course')
         if self.extra_late_days < 0:
             raise ValidationError('extra_late_days must be non-negative')
 
@@ -71,8 +69,6 @@ class LateDaysForUser(DictSerializable):
 
     @staticmethod
     def get(user: User, course: Course) -> "LateDaysForUser":
-        if user not in course.students.all():
-            raise ValueError("user must be a student in the course")
         queryset = User.objects.filter(pk=user.pk)
         return LateDaysForUser.get_many(queryset, course)[0]
 

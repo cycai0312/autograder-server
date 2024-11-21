@@ -129,11 +129,6 @@ class LateDaysForUserTestBase(UnitTestBase):
 
 
 class LateDaysForUserGetTestCase(LateDaysForUserTestBase):
-    def test_not_a_student_error(self):
-        user = obj_build.make_user()
-        with self.assertRaises(ValueError):
-            ag_models.LateDaysForUser.get(user, self.course)
-
     def test_no_submissions_no_extra(self):
         user = self.make_student()
         late_days = ag_models.LateDaysForUser.get(user, self.course)

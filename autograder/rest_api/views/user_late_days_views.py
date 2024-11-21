@@ -91,8 +91,8 @@ changed."""
                 '200': _RESPONSE
             }
         },
-        'PATCH': {
-            'operation_id': 'putLateDays',
+        'PUT': {
+            'operation_id': 'putExtraLateDays',
             'parameters': _PARAMS,
             'request': _REQUEST,
             'responses': {
@@ -109,45 +109,43 @@ changed."""
 
         course = get_object_or_404(ag_models.Course.objects, pk=kwargs['pk'])
 
-        late_days = ag_models.LateDaysForUser.get(user, course.pk)
-
-        self._check_read_permissions(late_days)
+        self._check_read_permissions(user, course)
+        late_days = ag_models.LateDaysForUser.get(user, course)
 
         return response.Response(late_days.to_dict())
 
     @method_decorator(require_body_params('extra_late_days'))
-    def patch(self, request: Request, *args, **kwargs):
+    def put(self, request: Request, *args, **kwargs):
         try:
             user = get_object_or_404(User.objects, pk=int(kwargs['username_or_pk']))
         except ValueError:
             user = get_object_or_404(User.objects, username=kwargs['username_or_pk'])
 
-        course = get_object_or_404(ag_models.Course.objects, pk=request.query_params['course_pk'])
+        course = get_object_or_404(ag_models.Course.objects, pk=int(kwargs['pk']))
+
+        self._check_read_permissions(user, course)
+        self._check_write_permissions(user, course)
 
         with transaction.atomic():
             extra_late_days = ag_models.ExtraLateDays.objects.get_or_create(
                 user=user, course=course
             )[0]
-
-            self._check_read_permissions(extra_late_days)
-            self._check_write_permissions(extra_late_days)
-
             extra_late_days.extra_late_days = request.data['extra_late_days']
             extra_late_days.save()
             late_days = ag_models.LateDaysForUser.get(user, course)
 
             return response.Response(late_days.to_dict())
 
-    def _check_read_permissions(self, late_days: ag_models.LateDaysForUser):
+    def _check_read_permissions(self, requestee: User, course: ag_models.Course):
         user = self.request.user
-        if user == late_days.user:
+        if user == requestee:
             return
 
-        if late_days.course.is_staff(user):
+        if course.is_staff(user):
             return
 
         raise PermissionDenied
 
-    def _check_write_permissions(self, late_days: ag_models.LateDaysForUser):
-        if not late_days.course.is_admin(self.request.user):
+    def _check_write_permissions(self, requestee: User, course: ag_models.Course):
+        if not course.is_admin(self.request.user):
             raise PermissionDenied

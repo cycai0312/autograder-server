@@ -16,7 +16,7 @@ from django.db import models, transaction
 from django.db.models import Model
 
 from autograder.core.fields import ValidatedJSONField
-from autograder.rest_api.serialize_user import serialize_user
+from autograder.rest_api.serialize_user import serialize_user, SerializedUser
 
 _AutograderModelType = TypeVar('_AutograderModelType', bound='AutograderModel')
 
@@ -249,7 +249,7 @@ class ToDictMixin:
         return result
 
 
-def _serialize_model_obj(obj: Union[ToDictMixin, User]) -> Dict[str, object]:
+def _serialize_model_obj(obj: Union[ToDictMixin, User]) -> Dict[str, object] | SerializedUser:
     if isinstance(obj, User):
         return serialize_user(obj)
 

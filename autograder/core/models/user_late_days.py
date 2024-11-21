@@ -1,5 +1,5 @@
-from typing import TypedDict, overload
-from datetime import timedelta
+from typing import TypedDict, overload, cast
+from datetime import timedelta, datetime
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -27,7 +27,7 @@ class ExtraLateDays(AutograderModel):
     SERIALIZABLE_FIELDS = ('course', 'user', 'extra_late_days')
     EDITABLE_FIELDS = ('extra_late_days')
 
-    def clean(self):
+    def clean(self) -> None:
         super().clean()
         if self.extra_late_days < 0:
             raise ValidationError('extra_late_days must be non-negative')
@@ -47,7 +47,7 @@ class LateDaysForUser(DictSerializable):
         self.late_days_remaining = late_days_remaining
 
     @staticmethod
-    def _days_late(group: Group, submission_timestamp: models.DateTimeField) -> int:
+    def _days_late(group: Group, submission_timestamp: datetime) -> int:
         if group.project.closing_time is None:
             return 0
         elif group.extended_due_date is None:
@@ -58,7 +58,7 @@ class LateDaysForUser(DictSerializable):
 
         return delta.days + 1 if delta > timedelta() else 0
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, object]:
         return {
             'user': serialize_user(self.user),
             'course': self.course.to_dict(),
@@ -73,7 +73,7 @@ class LateDaysForUser(DictSerializable):
         return LateDaysForUser.get_many(queryset, course)[0]
 
     @staticmethod
-    def get_many(users_queryset: models.QuerySet, course: Course) -> list["LateDaysForUser"]:
+    def get_many(users_queryset: models.QuerySet[User], course: Course) -> list["LateDaysForUser"]:
         # Fetch all submissions for the course's groups, ordered by descending timestamp
         groups_with_submissions = Group.objects.filter(
             project__course=course,
@@ -105,14 +105,14 @@ class LateDaysForUser(DictSerializable):
 
         results = []
         for user in users_with_groups:
-            if user.late_days_for_course:
-                extra = user.late_days_for_course[0].extra_late_days
+            if user.late_days_for_course:  # type:ignore
+                extra = user.late_days_for_course[0].extra_late_days  # type:ignore
             else:
                 extra = 0
 
             used = 0
 
-            for group in user.groups_with_submissions:
+            for group in user.groups_with_submissions:  # type:ignore
                 # Filter submissions that count for the user
                 user_submissions = [
                     submission for submission in group.all_submissions

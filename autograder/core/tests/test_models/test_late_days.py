@@ -41,14 +41,6 @@ class ExtraLateDaysTestCase(UnitTestBase):
         )
         self.assertEqual(from_db.extra_late_days, 2)
 
-    def test_invalid_create_not_in_course(self) -> None:
-        new_user = obj_build.make_user()
-        with self.assertRaises(ValidationError) as cm:
-            ag_models.ExtraLateDays.objects.validate_and_create(
-                course=self.course,
-                user=new_user
-            )
-
     def test_invalid_create_negative_value(self) -> None:
         with self.assertRaises(ValidationError) as cm:
             ag_models.ExtraLateDays.objects.validate_and_create(

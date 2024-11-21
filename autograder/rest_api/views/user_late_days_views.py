@@ -53,9 +53,11 @@ class LateDaysView(AlwaysIsAuthenticatedMixin, APIView):
             }
         },
         'description': """
-`extra_late_days_granted` + the number of late days set for the project must be greater than or equal to `late_days_used`.
+`extra_late_days_granted` + the number of late days set for the project must be greater than or
+equal to `late_days_used`.
 
-**Note:** the `late_days_used` field is a property computed from submission data and can't be changed."""
+**Note:** the `late_days_used` field is a property computed from submission data and can't be
+changed."""
     }
 
     _PARAMS: list[OrRef[ParameterObject]] = [
@@ -123,8 +125,9 @@ class LateDaysView(AlwaysIsAuthenticatedMixin, APIView):
         course = get_object_or_404(ag_models.Course.objects, pk=request.query_params['course_pk'])
 
         with transaction.atomic():
-            extra_late_days = ag_models.ExtraLateDays.objects.get_or_create(user=user, course=course)[
-                0]
+            extra_late_days = ag_models.ExtraLateDays.objects.get_or_create(
+                user=user, course=course
+            )[0]
 
             self._check_read_permissions(extra_late_days)
             self._check_write_permissions(extra_late_days)

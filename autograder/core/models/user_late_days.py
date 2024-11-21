@@ -12,6 +12,7 @@ from .course import Course
 
 from autograder.rest_api.serialize_user import serialize_user
 
+
 class ExtraLateDays(AutograderModel):
     objects = AutograderModelManager['ExtraLateDays']()
 
@@ -58,7 +59,6 @@ class LateDaysForUser(DictSerializable):
             delta = submission_timestamp - deadline
 
         return delta.days + 1 if delta > timedelta() else 0
-
 
     def to_dict(self):
         return {
@@ -109,7 +109,11 @@ class LateDaysForUser(DictSerializable):
 
         results = []
         for user in users_with_groups:
-            extra = user.late_days_for_course[0].extra_late_days if user.late_days_for_course else 0
+            if user.late_days_for_course:
+                extra = user.late_days_for_course[0].extra_late_days
+            else:
+                extra = 0
+
             used = 0
 
             for group in user.groups_with_submissions:

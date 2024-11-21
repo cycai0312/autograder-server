@@ -1,29 +1,19 @@
-from typing import Dict, List, Sequence
+from typing import List
 
-from django.core.serializers import serialize
-from django.http import JsonResponse
 from django.contrib.auth.models import User
-from django.db import transaction
-from django.shortcuts import get_object_or_404
-from django.utils.decorators import method_decorator
 from rest_framework import permissions, response, status
 from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.request import Request
 from rest_framework.views import APIView
 
 import autograder.core.models as ag_models
 from autograder.rest_api.schema import (
-    AGDetailViewSchemaGenerator, APIClassType, APITags, ContentType, CustomViewSchema,
-    ParameterObject, as_array_content_obj, as_content_obj
+    AGDetailViewSchemaGenerator, APIClassType, APITags, CustomViewSchema, as_array_content_obj
 )
-from autograder.rest_api.schema.openapi_types import SchemaObject, ResponseObject, OrRef, RequestBodyObject
-from autograder.rest_api.schema.utils import stderr
 from autograder.rest_api.schema.view_schema_generators import AGViewSchemaGenerator
 from autograder.rest_api.serialize_user import serialize_user
 from autograder.rest_api.views.ag_model_views import (
-    AGModelAPIView, AGModelDetailView, AlwaysIsAuthenticatedMixin, NestedModelView,
-    require_body_params, require_query_params
+    AGModelAPIView, AGModelDetailView, AlwaysIsAuthenticatedMixin, NestedModelView
 )
 
 

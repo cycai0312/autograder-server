@@ -11,6 +11,7 @@ SerializedUser = TypedDict('SerializedUser', {
     'is_superuser': bool
 })
 
+
 def serialize_user(user: User) -> SerializedUser:
     return {
         'pk': user.pk,
@@ -20,4 +21,3 @@ def serialize_user(user: User) -> SerializedUser:
         'email': user.email,
         'is_superuser': user.is_superuser,
     }
-

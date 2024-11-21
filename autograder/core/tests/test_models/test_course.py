@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 
 import autograder.core.utils as core_ut
 import autograder.utils.testing.model_obj_builders as obj_build
-from autograder.core.models import Course, LateDaysRemaining, Semester
+from autograder.core.models import Course, Semester
 from autograder.core.models.course import clear_cached_user_roles
 from autograder.utils.testing import UnitTestBase
 

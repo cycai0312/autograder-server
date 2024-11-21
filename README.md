@@ -144,3 +144,14 @@ In addition to running pycodestyle, pydocstyle, and mypy, this will also check t
 
 Note that validating the API schema requires Node 16 (newer versions may work as well).
 You can install Node 16 with [NVM](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating).
+
+# Profiling
+You can use django-debug-toolbar to profile API requests.
+
+1. Follow the [dev stack setup tutorial](https://github.com/eecs-autograder/autograder-full-stack/blob/master/docs/development_setup.md) for the [autograder-full-stack repo](https://github.com/eecs-autograder/autograder-full-stack).
+2. Populate the database with benchmark data. 
+Benchmark scripts should be added to autograder-server/benchmarks and should include:
+    - Instructions on how to run them on the development stack.
+    - Results from the last time they were run (and specifying what machine).
+3. Visit the API URL in your browser with the query parameter `debug=true` appended. 
+For example: `https://localhost:<port>/api/users/current/?debug=true`

@@ -21,7 +21,7 @@ class ListLateDaysForUserView(AlwaysIsAuthenticatedMixin, APIView):
         [APITags.users, APITags.courses], ag_models.LateDaysForUser)
 
     def get(self, request: Request, *args, **kwargs):
-        course = get_object_or_404(ag_models.Course.objects, kwargs['pk'])
+        course = get_object_or_404(ag_models.Course.objects, pk=kwargs['pk'])
         self._check_read_permissions(course)
         late_days_for_users = [
             item.to_dict() for item in ag_models.LateDaysForUser.get_all(course)

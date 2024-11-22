@@ -1,7 +1,7 @@
 import datetime
 import os
 import random
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Sequence
 from unittest import mock
 from urllib.parse import urlencode
 
@@ -629,9 +629,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
 
         for user in self.group.members.all():
             self.assertEqual(1, self.group.late_days_used[user.username])
-
-            remaining = ag_models.LateDaysRemaining.objects.get(user=user, course=self.course)
-            self.assertEqual(self.num_late_days - 1, remaining.late_days_remaining)
+            self.assert_correct_user_late_days_used(user, 1)
 
     def test_multiple_submissions_in_one_late_day(self):
         submitter = self.group.members.first()
@@ -642,9 +640,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
 
         for user in self.group.members.all():
             self.assertEqual(1, self.group.late_days_used[user.username])
-
-            remaining = ag_models.LateDaysRemaining.objects.get(user=user, course=self.course)
-            self.assertEqual(self.num_late_days - 1, remaining.late_days_remaining)
+            self.assert_correct_user_late_days_used(user, 1)
 
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(hours=2),
@@ -653,9 +649,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
 
         for user in self.group.members.all():
             self.assertEqual(1, self.group.late_days_used[user.username])
-
-            remaining = ag_models.LateDaysRemaining.objects.get(user=user, course=self.course)
-            self.assertEqual(self.num_late_days - 1, remaining.late_days_remaining)
+            self.assert_correct_user_late_days_used(user, 1)
 
     def test_multiple_late_days_used_one_at_a_time_same_project(self):
         submitter = self.group.members.first()
@@ -666,9 +660,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
 
         for user in self.group.members.all():
             self.assertEqual(1, self.group.late_days_used[user.username])
-
-            remaining = ag_models.LateDaysRemaining.objects.get(user=user, course=self.course)
-            self.assertEqual(self.num_late_days - 1, remaining.late_days_remaining)
+            self.assert_correct_user_late_days_used(user, 1)
 
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(days=1, hours=1),
@@ -677,9 +669,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
 
         for user in self.group.members.all():
             self.assertEqual(2, self.group.late_days_used[user.username])
-
-            remaining = ag_models.LateDaysRemaining.objects.get(user=user, course=self.course)
-            self.assertEqual(self.num_late_days - 2, remaining.late_days_remaining)
+            self.assert_correct_user_late_days_used(user, 2)
 
     def test_multiple_late_days_used_by_one_submission(self):
         submitter = self.group.members.first()
@@ -690,9 +680,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
 
         for user in self.group.members.all():
             self.assertEqual(2, self.group.late_days_used[user.username])
-
-            remaining = ag_models.LateDaysRemaining.objects.get(user=user, course=self.course)
-            self.assertEqual(self.num_late_days - 2, remaining.late_days_remaining)
+            self.assert_correct_user_late_days_used(user, 2)
 
     def test_multiple_late_days_used_different_projects(self):
         other_project = obj_build.make_project(
@@ -712,9 +700,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
 
         for user in self.group.members.all():
             self.assertEqual(1, self.group.late_days_used[user.username])
-
-            remaining = ag_models.LateDaysRemaining.objects.get(user=user, course=self.course)
-            self.assertEqual(self.num_late_days - 1, remaining.late_days_remaining)
+            self.assert_correct_user_late_days_used(user, 1)
 
         self.submit(other_group, submitter,
                     self.closing_time + datetime.timedelta(hours=1),
@@ -725,9 +711,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
         for user in other_group.members.all():
             self.assertEqual(1, self.group.late_days_used[user.username])
             self.assertEqual(1, other_group.late_days_used[user.username])
-
-            remaining = ag_models.LateDaysRemaining.objects.get(user=user, course=self.course)
-            self.assertEqual(self.num_late_days - 2, remaining.late_days_remaining)
+            self.assert_correct_user_late_days_used(user, 2)
 
     def test_late_days_used_on_top_of_extension(self):
         extension = self.closing_time + datetime.timedelta(days=2)
@@ -746,16 +730,11 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
 
         for user in self.group.members.all():
             self.assertEqual(1, self.group.late_days_used[user.username])
-
-            remaining = ag_models.LateDaysRemaining.objects.get(user=user, course=self.course)
-            self.assertEqual(self.num_late_days - 1, remaining.late_days_remaining)
+            self.assert_correct_user_late_days_used(user, 1)
 
     def test_user_with_no_late_days_in_group_cannot_submit_after_deadline(self):
         submitter = self.group.members.first()
-        late_days_remaining = ag_models.LateDaysRemaining.objects.validate_and_create(
-            user=submitter, course=self.course)
-        late_days_remaining.late_days_used = self.num_late_days
-        late_days_remaining.save()
+        self.burn_late_days(submitter, self.num_late_days)
 
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(hours=1),
@@ -763,42 +742,26 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
         self.group.refresh_from_db()
 
         self.assertNotIn(submitter.username, self.group.late_days_used)
-        actual_remaining = ag_models.LateDaysRemaining.objects.get(
-            user=submitter, course=self.course)
-        self.assertEqual(0, actual_remaining.late_days_remaining)
+        self.assert_correct_user_late_days_used(submitter, self.num_late_days)
 
         for user in self.group.members.exclude(pk=submitter.pk):
             self.assertNotIn(user.username, self.group.late_days_used)
-
-            self.assertFalse(
-                ag_models.LateDaysRemaining.objects.filter(user=user, course=self.course).exists())
+            self.assert_correct_user_late_days_used(user, 0)
 
     def test_user_with_not_enough_late_days_in_group_cannot_submit_after_deadline(self):
         submitter = self.group.members.first()
-        late_days_remaining = ag_models.LateDaysRemaining.objects.validate_and_create(
-            user=submitter, course=self.course)
-        late_days_remaining.late_days_used = self.num_late_days - 1
-        late_days_remaining.save()
-
-        self.group.late_days_used[submitter.username] = 1
-        self.group.save()
-
+        self.burn_late_days(submitter, 1)
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(days=2, hours=1),
                     expect_failure=True)
         self.group.refresh_from_db()
 
-        actual_remaining = ag_models.LateDaysRemaining.objects.get(
-            user=submitter, course=self.course)
-        self.assertEqual(1, actual_remaining.late_days_remaining)
+        self.assert_correct_user_late_days_used(submitter, 1)
 
     def test_non_submitting_member_has_no_late_days_submission_does_not_count_for_them(self):
         submitter = self.group.members.first()
         non_submitter = self.group.members.exclude(pk=submitter.pk).first()
-        late_days_remaining = ag_models.LateDaysRemaining.objects.validate_and_create(
-            user=non_submitter, course=self.course)
-        late_days_remaining.late_days_used = self.num_late_days
-        late_days_remaining.save()
+        self.burn_late_days(non_submitter, self.num_late_days)
 
         submission = self.submit(self.group, submitter,
                                  self.closing_time + datetime.timedelta(hours=1),
@@ -809,20 +772,13 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
 
         self.assertEqual(1, self.group.late_days_used[submitter.username])
 
-        remaining = ag_models.LateDaysRemaining.objects.get(user=submitter, course=self.course)
-        self.assertEqual(self.num_late_days - 1, remaining.late_days_remaining)
-
-        non_submitter_remaining = ag_models.LateDaysRemaining.objects.get(
-            user=non_submitter, course=self.course)
-        self.assertEqual(0, non_submitter_remaining.late_days_remaining)
+        self.assert_correct_user_late_days_used(submitter, 1)
+        self.assert_correct_user_late_days_used(non_submitter, self.num_late_days)
 
     def test_non_submitting_member_has_too_few_late_days_submission_does_not_count_for_them(self):
         submitter = self.group.members.first()
         non_submitter = self.group.members.exclude(pk=submitter.pk).first()
-        late_days_remaining = ag_models.LateDaysRemaining.objects.validate_and_create(
-            user=non_submitter, course=self.course)
-        late_days_remaining.late_days_used = self.num_late_days - 1
-        late_days_remaining.save()
+        self.burn_late_days(non_submitter, 2)
 
         submission = self.submit(self.group, submitter,
                                  self.closing_time + datetime.timedelta(days=1, hours=1),
@@ -832,31 +788,18 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
         self.group.refresh_from_db()
 
         self.assertEqual(2, self.group.late_days_used[submitter.username])
-
-        remaining = ag_models.LateDaysRemaining.objects.get(user=submitter, course=self.course)
-        self.assertEqual(self.num_late_days - 2, remaining.late_days_remaining)
-
-        non_submitter_remaining = ag_models.LateDaysRemaining.objects.get(
-            user=non_submitter, course=self.course)
-        self.assertEqual(1, non_submitter_remaining.late_days_remaining)
-
+        self.assert_correct_user_late_days_used(submitter, 2)
+        self.assert_correct_user_late_days_used(non_submitter, 2)
         self.assertNotIn(non_submitter.username, self.group.late_days_used)
 
     def test_group_with_no_late_days_cannot_submit_past_deadline(self):
         for user in self.group.members.all():
-            late_days_remaining = ag_models.LateDaysRemaining.objects.validate_and_create(
-                user=user, course=self.course)
-            late_days_remaining.late_days_used = self.num_late_days
-            late_days_remaining.save()
-
+            self.burn_late_days(user, self.num_late_days)
             self.submit(self.group, user,
                         self.closing_time + datetime.timedelta(hours=1),
                         expect_failure=True)
 
     def test_submit_far_past_deadline_not_enough_late_days_late_day_total_preserved(self):
-        for user in self.group.members.all():
-            ag_models.LateDaysRemaining.objects.validate_and_create(user=user, course=self.course)
-
         for user in self.group.members.all():
             self.submit(self.group, user,
                         self.closing_time + datetime.timedelta(days=self.num_late_days, hours=1),
@@ -864,9 +807,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
             self.group.refresh_from_db()
 
             self.assertNotIn(user.username, self.group.late_days_used)
-
-            remaining = ag_models.LateDaysRemaining.objects.get(user=user, course=self.course)
-            self.assertEqual(self.num_late_days, remaining.late_days_remaining)
+            self.assert_correct_user_late_days_used(user, 0)
 
     def test_late_day_use_disallowed_for_project(self):
         self.project.validate_and_update(allow_late_days=False)
@@ -877,9 +818,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
             self.group.refresh_from_db()
 
             self.assertNotIn(user.username, self.group.late_days_used)
-
-            self.assertFalse(
-                ag_models.LateDaysRemaining.objects.filter(user=user, course=self.course).exists())
+            self.assert_correct_user_late_days_used(user, 0)
 
     def test_late_days_allowed_but_no_closing_time(self):
         self.project.validate_and_update(closing_time=None, soft_closing_time=timezone.now())
@@ -892,9 +831,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
 
         for user in self.group.members.all():
             self.assertNotIn(user.username, self.group.late_days_used)
-
-            self.assertFalse(
-                ag_models.LateDaysRemaining.objects.filter(user=user, course=self.course).exists())
+            self.assert_correct_user_late_days_used(user, 0)
 
     def test_bonus_submission_used_on_late_day(self):
         self.project.validate_and_update(
@@ -917,9 +854,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
 
         for user in self.group.members.all():
             self.assertEqual(1, self.group.late_days_used[user.username])
-
-            remaining = ag_models.LateDaysRemaining.objects.get(user=user, course=self.course)
-            self.assertEqual(self.num_late_days - 1, remaining.late_days_remaining)
+            self.assert_correct_user_late_days_used(user, 1)
 
     def test_group_out_of_daily_submissions_no_late_days_used(self):
         self.project.validate_and_update(
@@ -938,9 +873,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
 
         for user in self.group.members.all():
             self.assertNotIn(user.username, self.group.late_days_used)
-
-            self.assertFalse(
-                ag_models.LateDaysRemaining.objects.filter(user=user, course=self.course).exists())
+            self.assert_correct_user_late_days_used(user, 0)
 
     def submit(self, group: ag_models.Group, user: User, timestamp: datetime.datetime,
                *, expect_failure: bool) -> Optional[ag_models.Submission]:
@@ -960,6 +893,25 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
                 submission.save()
 
                 return submission
+
+    def burn_late_days(self, user: User, num_late_days: int):
+        assert (num_late_days <= self.num_late_days and num_late_days > 0)
+        other_project = obj_build.make_project(
+            self.course, closing_time=self.closing_time, visible_to_students=True,
+            allow_late_days=True)
+        other_group = ag_models.Group.objects.validate_and_create(
+            members=[user],
+            check_group_size_limits=False,
+            project=other_project
+        )
+        late = self.closing_time + datetime.timedelta(days=num_late_days - 1, hours=1)
+        self.submit(other_group, user, late, expect_failure=False)
+
+    def assert_correct_user_late_days_used(self, user: User, used: int = 0):
+        late_days = ag_models.LateDaysForUser.get(user, self.course)
+        assert (late_days.late_days_used == used)
+        assert (late_days.late_days_remaining == self.num_late_days - used)
+        assert (late_days.late_days_remaining >= 0)
 
 
 class CreateSubmissionDailyLimitBookkeepingTestCase(UnitTestBase):

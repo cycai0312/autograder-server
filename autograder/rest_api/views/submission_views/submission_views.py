@@ -179,7 +179,11 @@ class ListCreateSubmissionView(NestedModelView):
                     late_days = ag_models.LateDaysForUser.get(user, course)
                     late_days_needed = (timestamp - user_deadline).days + 1
 
-                    if late_days.late_days_remaining < late_days_needed:
+                    if late_days.late_days_remaining >= late_days_needed:
+                        group.late_days_used.setdefault(user.username, 0)
+                        group.late_days_used[user.username] += late_days_needed
+                        group.save()
+                    else:
                         does_not_count_for.append(user.username)
 
                 if request.user.username in does_not_count_for:

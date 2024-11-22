@@ -256,3 +256,8 @@ SANDBOX_IMAGE_REGISTRY_PORT = os.environ.get('SANDBOX_IMAGE_REGISTRY_PORT', '500
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 from autograder.settings.celery_settings import *  # noqa
+
+
+# Indicates that the Django service is running as part of the web development stack
+# (specifically the web server rather than the graders or running linters).
+IS_DEV_SERVER = os.environ.get('IS_DEV_SERVER', 'false') == 'true'

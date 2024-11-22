@@ -25,13 +25,12 @@ urlpatterns = [
     url(r'^api/', include('autograder.mutant_hints.urls')),
 ]
 
-if settings.DEBUG:
+if settings.IS_DEV_SERVER:
     urlpatterns += [
         url(r'^static/(?P<path>.*)$', views.serve),
     ]
 
-    # See note in autograder/settings/development.py
-    # import debug_toolbar
-    # urlpatterns = [
-    #     url(r'^__debug__/', include(debug_toolbar.urls)),
-    # ] + urlpatterns
+    import debug_toolbar
+    urlpatterns = [
+        url(r'^__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns

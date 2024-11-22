@@ -20,7 +20,7 @@ celery==4.4.7
     # via -r requirements.in
 decorator==4.4.2
     # via ipython
-django==3.2.2
+django==3.2.25
     # via
     #   -r requirements.in
     #   django-redis

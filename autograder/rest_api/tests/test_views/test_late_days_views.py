@@ -1,3 +1,4 @@
+from typing import TypedDict
 from datetime import datetime, timedelta
 import pytz
 
@@ -260,16 +261,26 @@ class UserLateDaysViewTestCase(UnitTestBase):
         return url
 
 
+ExpectedLateDaysForUser = TypedDict(
+    'ExpectedLateDaysForUser',
+    user=User,
+    used=int,
+    extra=int
+)
+
+
 class ListUserLateDaysViewTestCase(UnitTestBase):
+
     def setUp(self):
         super().setUp()
         self.client = APIClient()
 
-        self.initial_num_late_days = 4
-        self.course = obj_build.make_course(num_late_days=self.initial_num_late_days)
+        self.num_late_days = 4
+        self.course = obj_build.make_course(num_late_days=self.num_late_days)
         self.url = reverse('list-user-late-days', kwargs={'pk': self.course.pk, })
         self.admin = obj_build.make_admin_user(self.course)
         self.client.force_authenticate(self.admin)
+        self.base_time = pytz.utc.localize(datetime.now())
 
     def do_permission_denied_test(self, user: User):
         self.client.force_authenticate(user)
@@ -293,11 +304,99 @@ class ListUserLateDaysViewTestCase(UnitTestBase):
         admin = obj_build.make_admin_user(other_course)
         self.do_permission_denied_test(admin)
 
-    def test_view_no_students(self):
-        resp = self.client.get(self.url)
-        self.assertEqual(status.HTTP_200_OK, resp.status_code)
-        self.assertEqual([], resp.data)
-
     def test_course_dne(self):
         resp = self.client.get(reverse('list-user-late-days', kwargs={'pk': 999}))
         self.assertEqual(status.HTTP_404_NOT_FOUND, resp.status_code)
+
+    def test_no_students_but_student_in_other_course(self):
+        other_course = obj_build.make_course()
+        obj_build.make_student_user(other_course)
+        self.do_list_late_days_test([])
+
+    def test_no_projects_no_submissions(self):
+        students = obj_build.make_student_users(self.course, 3)
+        self.do_list_late_days_test([
+            {'user': stud, 'extra': 0, 'used': 0}
+            for stud in students
+        ])
+
+    def test_one_project_no_late_submissions(self):
+        project = obj_build.make_project(self.course, closing_time=self.base_time)
+        groups = [obj_build.make_group(project=project) for _ in range(3)]
+
+        expected = []
+        for g in groups:
+            obj_build.make_finished_submission(g, timestamp=self.base_time)
+            expected.append({'user': g.members.first(), 'used': 0, 'extra': 0})
+        self.do_list_late_days_test(expected)
+
+    def test_one_project_some_late(self):
+        project = obj_build.make_project(
+            self.course,
+            closing_time=self.base_time,
+            allow_late_days=True
+        )
+        groups = [obj_build.make_group(project=project) for _ in range(3)]
+
+        obj_build.make_finished_submission(
+            groups[1],
+            timestamp=self.base_time + timedelta(hours=1)  # one day late
+        )
+        obj_build.make_finished_submission(
+            groups[2],
+            timestamp=self.base_time + timedelta(days=1, hours=1)  # two days late
+        )
+        expected: list[ExpectedLateDaysForUser] = [
+            {'user': groups[0].members.first(), 'used': 0, 'extra': 0},
+            {'user': groups[1].members.first(), 'used': 1, 'extra': 0},
+            {'user': groups[2].members.first(), 'used': 2, 'extra': 0}
+        ]
+        self.do_list_late_days_test(expected)
+
+    def test_no_project_some_extra(self):
+        students = obj_build.make_student_users(self.course, 3)
+        self.add_extra_late_days(students[1], 1)
+        self.add_extra_late_days(students[2], 2)
+        expected: list[ExpectedLateDaysForUser] = [
+            {'user': students[0], 'used': 0, 'extra': 0},
+            {'user': students[1], 'used': 0, 'extra': 1},
+            {'user': students[2], 'used': 0, 'extra': 2}
+        ]
+        self.do_list_late_days_test(expected)
+
+    def add_extra_late_days(self, user: User, num_extra: int) -> None:
+        resp = self.client.put(
+            reverse('user-late-days', kwargs={
+                'pk': self.course.pk, 'username_or_pk': user.pk
+            }),
+            {'extra_late_days': num_extra}
+        )
+
+        # sanity check that this succeeded
+        assert status.HTTP_200_OK == resp.status_code
+
+    def do_list_late_days_test(self, expected: list[ExpectedLateDaysForUser]) -> None:
+        # sanity check that expected is a list of data for unique users
+        seen = set()
+        for elem in expected:
+            assert elem['user'].pk not in seen
+            seen.add(elem['user'].pk)
+
+        resp = self.client.get(self.url)
+        self.assertEqual(status.HTTP_200_OK, resp.status_code)
+        self.assertEqual(len(expected), len(resp.data))
+
+        for exp in expected:
+            pk = exp['user'].pk
+            used = exp['used']
+            extra = exp['extra']
+            remaining = self.num_late_days + extra - used
+
+            # Grab the datum for the user, and check that there is only one match
+            matches = [elem for elem in resp.data if elem['user']['pk'] == pk]
+            self.assertEqual(1, len(matches))
+
+            actual = matches[0]
+            self.assertEqual(used, actual['late_days_used'])
+            self.assertEqual(remaining, actual['late_days_remaining'])
+            self.assertEqual(extra, actual['extra_late_days'])

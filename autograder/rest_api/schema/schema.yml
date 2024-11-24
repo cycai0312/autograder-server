@@ -4764,6 +4764,9 @@ components:
         extra_late_days:
           type: integer
           description: ''
+        late_days_used_per_project:
+          type: object
+          description: ''
         late_days_used:
           type: integer
           description: ''
@@ -4774,6 +4777,7 @@ components:
       - user
       - course
       - extra_late_days
+      - late_days_used_per_project
       - late_days_used
       - late_days_remaining
     Course:
@@ -5628,16 +5632,6 @@ components:
         bonus_submissions_remaining:
           description: The number of unused bonus submission tokens this group has.
           type: integer
-        late_days_used:
-          description: "Keeps track of how many late days each user in this\n    \
-            \        group has used.\n            Data format: {\n               \
-            \ \"\\<username\\>\": \\<num late days used\\>,\n                ...\n\
-            \            }\n            NOTE: This field is updated only when a group\
-            \ member uses a\n            late day. If a user is moved to another group\
-            \ or this group\n            is merged with another one, this field will\
-            \ NOT be updated."
-          nullable: false
-          type: object
         num_submissions:
           description: ''
           type: integer
@@ -5663,7 +5657,6 @@ components:
       - member_names
       - members
       - bonus_submissions_remaining
-      - late_days_used
       - num_submissions
       - num_submits_towards_limit
       - created_at

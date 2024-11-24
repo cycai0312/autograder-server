@@ -1,7 +1,7 @@
 import datetime
 import os
 import random
-from typing import Iterable, List, Optional, Sequence
+from typing import Iterable, List, Optional
 from unittest import mock
 from urllib.parse import urlencode
 
@@ -625,62 +625,74 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(hours=1),
                     expect_failure=False)
-        self.group.refresh_from_db()
 
         for user in self.group.members.all():
-            self.assertEqual(1, self.group.late_days_used[user.username])
-            self.assert_correct_user_late_days_used(user, 1)
+            self.assert_correct_user_late_days_used(
+                user,
+                total_used=1,
+                used_per_project={self.project.pk: 1}
+            )
 
     def test_multiple_submissions_in_one_late_day(self):
         submitter = self.group.members.first()
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(hours=1),
                     expect_failure=False)
-        self.group.refresh_from_db()
 
         for user in self.group.members.all():
-            self.assertEqual(1, self.group.late_days_used[user.username])
-            self.assert_correct_user_late_days_used(user, 1)
+            self.assert_correct_user_late_days_used(
+                user,
+                total_used=1,
+                used_per_project={self.project.pk: 1}
+            )
 
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(hours=2),
                     expect_failure=False)
-        self.group.refresh_from_db()
 
         for user in self.group.members.all():
-            self.assertEqual(1, self.group.late_days_used[user.username])
-            self.assert_correct_user_late_days_used(user, 1)
+            self.assert_correct_user_late_days_used(
+                user,
+                total_used=1,
+                used_per_project={self.project.pk: 1}
+            )
 
     def test_multiple_late_days_used_one_at_a_time_same_project(self):
         submitter = self.group.members.first()
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(hours=1),
                     expect_failure=False)
-        self.group.refresh_from_db()
 
         for user in self.group.members.all():
-            self.assertEqual(1, self.group.late_days_used[user.username])
-            self.assert_correct_user_late_days_used(user, 1)
+            self.assert_correct_user_late_days_used(
+                user,
+                total_used=1,
+                used_per_project={self.project.pk: 1}
+            )
 
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(days=1, hours=1),
                     expect_failure=False)
-        self.group.refresh_from_db()
 
         for user in self.group.members.all():
-            self.assertEqual(2, self.group.late_days_used[user.username])
-            self.assert_correct_user_late_days_used(user, 2)
+            self.assert_correct_user_late_days_used(
+                user,
+                total_used=2,
+                used_per_project={self.project.pk: 2}
+            )
 
     def test_multiple_late_days_used_by_one_submission(self):
         submitter = self.group.members.first()
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(days=1, hours=1),
                     expect_failure=False)
-        self.group.refresh_from_db()
 
         for user in self.group.members.all():
-            self.assertEqual(2, self.group.late_days_used[user.username])
-            self.assert_correct_user_late_days_used(user, 2)
+            self.assert_correct_user_late_days_used(
+                user,
+                total_used=2,
+                used_per_project={self.project.pk: 2}
+            )
 
     def test_multiple_late_days_used_different_projects(self):
         other_project = obj_build.make_project(
@@ -696,22 +708,24 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(hours=1),
                     expect_failure=False)
-        self.group.refresh_from_db()
 
         for user in self.group.members.all():
-            self.assertEqual(1, self.group.late_days_used[user.username])
-            self.assert_correct_user_late_days_used(user, 1)
+            self.assert_correct_user_late_days_used(
+                user,
+                total_used=1,
+                used_per_project={self.project.pk: 1}
+            )
 
         self.submit(other_group, submitter,
                     self.closing_time + datetime.timedelta(hours=1),
                     expect_failure=False)
-        self.group.refresh_from_db()
-        other_group.refresh_from_db()
 
         for user in other_group.members.all():
-            self.assertEqual(1, self.group.late_days_used[user.username])
-            self.assertEqual(1, other_group.late_days_used[user.username])
-            self.assert_correct_user_late_days_used(user, 2)
+            self.assert_correct_user_late_days_used(
+                user,
+                total_used=2,
+                used_per_project={self.project.pk: 1, other_group.project.pk: 1}
+            )
 
     def test_late_days_used_on_top_of_extension(self):
         extension = self.closing_time + datetime.timedelta(days=2)
@@ -721,16 +735,19 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(hours=1),
                     expect_failure=False)
-        self.group.refresh_from_db()
-        self.assertEqual({}, self.group.late_days_used)
+
+        for user in self.group.members.all():
+            self.assert_correct_user_late_days_used(user)
 
         self.submit(self.group, submitter, extension + datetime.timedelta(hours=1),
                     expect_failure=False)
-        self.group.refresh_from_db()
 
         for user in self.group.members.all():
-            self.assertEqual(1, self.group.late_days_used[user.username])
-            self.assert_correct_user_late_days_used(user, 1)
+            self.assert_correct_user_late_days_used(
+                user,
+                total_used=1,
+                used_per_project={self.project.pk: 1}
+            )
 
     def test_user_with_no_late_days_in_group_cannot_submit_after_deadline(self):
         submitter = self.group.members.first()
@@ -739,14 +756,11 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(hours=1),
                     expect_failure=True)
-        self.group.refresh_from_db()
 
-        self.assertNotIn(submitter.username, self.group.late_days_used)
-        self.assert_correct_user_late_days_used(submitter, self.num_late_days)
+        self.assert_correct_user_late_days_used(submitter, total_used=self.num_late_days)
 
         for user in self.group.members.exclude(pk=submitter.pk):
-            self.assertNotIn(user.username, self.group.late_days_used)
-            self.assert_correct_user_late_days_used(user, 0)
+            self.assert_correct_user_late_days_used(user)
 
     def test_user_with_not_enough_late_days_in_group_cannot_submit_after_deadline(self):
         submitter = self.group.members.first()
@@ -754,8 +768,6 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
         self.submit(self.group, submitter,
                     self.closing_time + datetime.timedelta(days=2, hours=1),
                     expect_failure=True)
-        self.group.refresh_from_db()
-
         self.assert_correct_user_late_days_used(submitter, 1)
 
     def test_non_submitting_member_has_no_late_days_submission_does_not_count_for_them(self):
@@ -767,13 +779,12 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
                                  self.closing_time + datetime.timedelta(hours=1),
                                  expect_failure=False)
         self.assertEqual([non_submitter.username], submission.does_not_count_for)
-
-        self.group.refresh_from_db()
-
-        self.assertEqual(1, self.group.late_days_used[submitter.username])
-
-        self.assert_correct_user_late_days_used(submitter, 1)
-        self.assert_correct_user_late_days_used(non_submitter, self.num_late_days)
+        self.assert_correct_user_late_days_used(
+            submitter,
+            total_used=1,
+            used_per_project={self.project.pk: 1}
+        )
+        self.assert_correct_user_late_days_used(non_submitter, total_used=self.num_late_days)
 
     def test_non_submitting_member_has_too_few_late_days_submission_does_not_count_for_them(self):
         submitter = self.group.members.first()
@@ -784,13 +795,12 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
                                  self.closing_time + datetime.timedelta(days=1, hours=1),
                                  expect_failure=False)
         self.assertEqual([non_submitter.username], submission.does_not_count_for)
-
-        self.group.refresh_from_db()
-
-        self.assertEqual(2, self.group.late_days_used[submitter.username])
-        self.assert_correct_user_late_days_used(submitter, 2)
-        self.assert_correct_user_late_days_used(non_submitter, 2)
-        self.assertNotIn(non_submitter.username, self.group.late_days_used)
+        self.assert_correct_user_late_days_used(
+            submitter,
+            total_used=2,
+            used_per_project={self.project.pk: 2}
+        )
+        self.assert_correct_user_late_days_used(non_submitter, total_used=2)
 
     def test_group_with_no_late_days_cannot_submit_past_deadline(self):
         for user in self.group.members.all():
@@ -798,16 +808,14 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
             self.submit(self.group, user,
                         self.closing_time + datetime.timedelta(hours=1),
                         expect_failure=True)
+            self.assert_correct_user_late_days_used(user, total_used=self.num_late_days)
 
     def test_submit_far_past_deadline_not_enough_late_days_late_day_total_preserved(self):
         for user in self.group.members.all():
             self.submit(self.group, user,
                         self.closing_time + datetime.timedelta(days=self.num_late_days, hours=1),
                         expect_failure=True)
-            self.group.refresh_from_db()
-
-            self.assertNotIn(user.username, self.group.late_days_used)
-            self.assert_correct_user_late_days_used(user, 0)
+            self.assert_correct_user_late_days_used(user, total_used=0)
 
     def test_late_day_use_disallowed_for_project(self):
         self.project.validate_and_update(allow_late_days=False)
@@ -815,10 +823,7 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
             self.submit(self.group, user,
                         self.closing_time + datetime.timedelta(hours=1),
                         expect_failure=True)
-            self.group.refresh_from_db()
-
-            self.assertNotIn(user.username, self.group.late_days_used)
-            self.assert_correct_user_late_days_used(user, 0)
+            self.assert_correct_user_late_days_used(user, total_used=0)
 
     def test_late_days_allowed_but_no_closing_time(self):
         self.project.validate_and_update(closing_time=None, soft_closing_time=timezone.now())
@@ -827,11 +832,9 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
         self.submit(self.group, submitter,
                     timezone.now() + datetime.timedelta(hours=1),
                     expect_failure=False)
-        self.group.refresh_from_db()
 
         for user in self.group.members.all():
-            self.assertNotIn(user.username, self.group.late_days_used)
-            self.assert_correct_user_late_days_used(user, 0)
+            self.assert_correct_user_late_days_used(user, total_used=0)
 
     def test_bonus_submission_used_on_late_day(self):
         self.project.validate_and_update(
@@ -850,11 +853,12 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
         self.assertFalse(submission2.is_past_daily_limit)
         self.assertTrue(submission2.is_bonus_submission)
 
-        self.group.refresh_from_db()
-
         for user in self.group.members.all():
-            self.assertEqual(1, self.group.late_days_used[user.username])
-            self.assert_correct_user_late_days_used(user, 1)
+            self.assert_correct_user_late_days_used(
+                user,
+                total_used=1,
+                used_per_project={self.project.pk: 1}
+            )
 
     def test_group_out_of_daily_submissions_no_late_days_used(self):
         self.project.validate_and_update(
@@ -869,11 +873,8 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
             self.group, submitter, self.closing_time - datetime.timedelta(days=2),
             expect_failure=True)
 
-        self.group.refresh_from_db()
-
         for user in self.group.members.all():
-            self.assertNotIn(user.username, self.group.late_days_used)
-            self.assert_correct_user_late_days_used(user, 0)
+            self.assert_correct_user_late_days_used(user, total_used=0)
 
     def submit(self, group: ag_models.Group, user: User, timestamp: datetime.datetime,
                *, expect_failure: bool) -> Optional[ag_models.Submission]:
@@ -907,11 +908,21 @@ class CreateSubmissionWithLateDaysTestCase(UnitTestBase):
         late = self.closing_time + datetime.timedelta(days=num_late_days - 1, hours=1)
         self.submit(other_group, user, late, expect_failure=False)
 
-    def assert_correct_user_late_days_used(self, user: User, used: int = 0):
+    def assert_correct_user_late_days_used(
+            self,
+            user: User,
+            total_used: int = 0,
+            used_per_project: dict[int, int] = {}):
         late_days = ag_models.LateDaysForUser.get(user, self.course)
-        assert (late_days.late_days_used == used)
-        assert (late_days.late_days_remaining == self.num_late_days - used)
-        assert (late_days.late_days_remaining >= 0)
+        self.assertEqual(late_days.late_days_used, total_used)
+        self.assertEqual(late_days.late_days_remaining, self.num_late_days - total_used)
+        self.assertTrue(late_days.late_days_remaining >= 0)
+
+        # check if the provided mappings for late days used per project exist in
+        # the database, but ignore other projects not given by the caller
+        for k, v in used_per_project.items():
+            self.assertIn(k, late_days.late_days_used_per_project)
+            self.assertEqual(v, late_days.late_days_used_per_project[k])
 
 
 class CreateSubmissionDailyLimitBookkeepingTestCase(UnitTestBase):

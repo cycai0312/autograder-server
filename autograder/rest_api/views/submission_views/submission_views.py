@@ -1,8 +1,6 @@
-import copy
 import datetime
 from typing import List, Optional
 
-from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import F
@@ -170,20 +168,17 @@ class ListCreateSubmissionView(NestedModelView):
             course = group.project.course
             if course.num_late_days != 0 and group.project.allow_late_days:
                 for user in group.members.all():
-                    user_deadline = self._get_deadline_for_user(group, user)
+                    late_days = ag_models.LateDaysForUser.get(user, course)
+
+                    user_deadline = self._get_deadline_for_user(group, late_days)
                     assert user_deadline >= group_deadline
 
                     if user_deadline > timestamp:
                         continue
 
-                    late_days = ag_models.LateDaysForUser.get(user, course)
                     late_days_needed = (timestamp - user_deadline).days + 1
 
-                    if late_days.late_days_remaining >= late_days_needed:
-                        group.late_days_used.setdefault(user.username, 0)
-                        group.late_days_used[user.username] += late_days_needed
-                        group.save()
-                    else:
+                    if late_days.late_days_remaining < late_days_needed:
                         does_not_count_for.append(user.username)
 
                 if request.user.username in does_not_count_for:
@@ -224,10 +219,14 @@ class ListCreateSubmissionView(NestedModelView):
         return (group.extended_due_date if group.extended_due_date is not None
                 else project.closing_time)
 
-    def _get_deadline_for_user(self, group: ag_models.Group,
-                               user: User) -> Optional[datetime.datetime]:
+    def _get_deadline_for_user(
+        self,
+        group: ag_models.Group,
+        late_days_for_user: ag_models.LateDaysForUser
+    ) -> Optional[datetime.datetime]:
         deadline = self._get_deadline_for_group(group)
-        return deadline + datetime.timedelta(days=group.late_days_used.get(user.username, 0))
+        late_days_used = late_days_for_user.late_days_used_per_project.get(group.project.pk, 0)
+        return deadline + datetime.timedelta(days=late_days_used)
 
     def _create_submission(self, group: ag_models.Group,
                            timestamp: datetime.datetime,

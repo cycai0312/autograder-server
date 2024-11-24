@@ -1,4 +1,3 @@
-from typing import TypedDict, overload, cast
 from datetime import timedelta, datetime
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -38,6 +37,7 @@ class LateDaysForUser(DictSerializable):
                  user: User,
                  course: Course,
                  extra_late_days: int,
+                 late_days_used_per_project: dict[int, int],
                  late_days_used: int,
                  late_days_remaining: int):
         self.user = user
@@ -45,6 +45,7 @@ class LateDaysForUser(DictSerializable):
         self.extra_late_days = extra_late_days
         self.late_days_used = late_days_used
         self.late_days_remaining = late_days_remaining
+        self.late_days_used_per_project = late_days_used_per_project
 
     @staticmethod
     def _days_late(group: Group, submission_timestamp: datetime) -> int:
@@ -64,7 +65,8 @@ class LateDaysForUser(DictSerializable):
             'course': self.course.to_dict(),
             'extra_late_days': self.extra_late_days,
             'late_days_used': self.late_days_used,
-            'late_days_remaining': self.late_days_remaining
+            'late_days_remaining': self.late_days_remaining,
+            'late_days_used_per_project': self.late_days_used_per_project
         }
 
     @staticmethod
@@ -111,6 +113,7 @@ class LateDaysForUser(DictSerializable):
                 extra = 0
 
             used = 0
+            used_per_project = {}
 
             for group in user.groups_with_submissions:  # type:ignore
                 # Filter submissions that count for the user
@@ -122,14 +125,16 @@ class LateDaysForUser(DictSerializable):
                 # Get the first (latest) submission that counts for the user
                 if user_submissions:
                     latest_submission = user_submissions[0]
-                    used += LateDaysForUser._days_late(
+                    used_this_project = LateDaysForUser._days_late(
                         group,
                         latest_submission.timestamp
                     )
+                    used_per_project[group.project.pk] = used_this_project
+                    used += used_this_project
 
             remaining = course.num_late_days + extra - used
             results.append(
-                LateDaysForUser(user, course, extra, used, remaining)
+                LateDaysForUser(user, course, extra, used_per_project, used, remaining)
             )
 
         return results

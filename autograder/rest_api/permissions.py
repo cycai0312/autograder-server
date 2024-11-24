@@ -327,7 +327,8 @@ def deadline_is_past(group: ag_models.Group, user: User):
     # final scores, and we've updated ultimate submission permissions
     # to not let staff request ultimate submission feedback on student
     # submissions until scores have been released.
-    if user.username in group.late_days_used:
-        deadline += datetime.timedelta(days=group.late_days_used[user.username])
+    late_days = ag_models.LateDaysForUser.get(user, group.project.course)
+    late_days_used_for_project = late_days.late_days_used_per_project.get(group.project.pk, 0)
+    deadline += datetime.timedelta(days=late_days_used_for_project)
 
     return deadline < now

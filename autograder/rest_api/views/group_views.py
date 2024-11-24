@@ -331,10 +331,6 @@ class MergeGroupsView(AGModelAPIView):
             check_group_size_limits=False,
             project=project,
             extended_due_date=self._get_merged_extended_due_date(group1, group2),
-            late_days_used={
-                **group1.late_days_used,
-                **group2.late_days_used,
-            },
         )
         # Group.save() sets bonus_submissions_remaining on create, so
         # we overwrite that value here.

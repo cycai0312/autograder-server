@@ -518,12 +518,17 @@ class UltimateSubmissionFeedbackTestCase(_FeedbackTestsBase):
             self.student1_most_recent_res, ag_models.FeedbackCategory.ultimate_submission)
 
     def test_student_get_ultimate_fdbk_but_has_unfinished_late_day_permission_denied(self):
+        base_time = timezone.now()
         self.assertEqual(ag_models.UltimateSubmissionPolicy.most_recent,
                          self.project.ultimate_submission_policy)
+
+        # use a late day
         self.project.validate_and_update(
-            closing_time=timezone.now() - timezone.timedelta(minutes=2))
-        self.student_group1.late_days_used = {self.student1.username: 1}
-        self.student_group1.save()
+            closing_time=base_time - timezone.timedelta(minutes=2),
+            allow_late_days=True,
+        )
+        self.course.validate_and_update(num_late_days=1)
+        obj_build.make_submission(group=self.student_group1, timestamp=base_time)
 
         self.client.force_authenticate(self.student1)
 

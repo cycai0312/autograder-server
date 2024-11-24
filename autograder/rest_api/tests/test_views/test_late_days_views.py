@@ -22,17 +22,18 @@ class UserLateDaysViewTestCase(UnitTestBase):
         self.course = obj_build.make_course(num_late_days=self.initial_num_late_days)
 
     def test_student_view_own_late_days(self):
+        self.maxDiff = None
         student = obj_build.make_student_user(self.course)
-        self.do_get_late_days_test(student, student, self.course, 0, 0)
+        self.do_get_late_days_test(student, student, self.course)
 
     def test_guest_view_own_late_days(self):
         guest = obj_build.make_user()
-        self.do_get_late_days_test(guest, guest, self.course, 0, 0)
+        self.do_get_late_days_test(guest, guest, self.course)
 
     def test_staff_view_other_students_late_days(self):
         staff = obj_build.make_staff_user(self.course)
         student = obj_build.make_student_user(self.course)
-        self.do_get_late_days_test(staff, student, self.course, 0, 0)
+        self.do_get_late_days_test(staff, student, self.course)
 
     def test_admin_change_extra_late_days_by_pk(self):
         admin = obj_build.make_admin_user(self.course)
@@ -42,16 +43,10 @@ class UserLateDaysViewTestCase(UnitTestBase):
         response = self.client.put(self.get_pk_url(student, self.course),
                                    {'extra_late_days': 42})
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual({
-            'extra_late_days': 42,
-            'late_days_used': 0,
-            'late_days_remaining': self.course.num_late_days + 42,
-            'user': serialize_user(student),
-            'course': self.course.to_dict()
-        }, response.data)
-
-        extra = ag_models.ExtraLateDays.objects.get(user=student, course=self.course)
-        self.assertEqual(42, extra.extra_late_days)
+        self.response_data_is_expected(response.data, user=student,
+                                       course=self.course, extra_late_days=42)
+        self.do_get_late_days_test(requestor=student, requestee=student,
+                                   course=self.course, extra_late_days=42)
 
     def test_admin_change_extra_late_days_by_username(self):
         admin = obj_build.make_admin_user(self.course)
@@ -61,38 +56,25 @@ class UserLateDaysViewTestCase(UnitTestBase):
         response = self.client.put(self.get_username_url(student, self.course),
                                    {'extra_late_days': 42})
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual({
-            'extra_late_days': 42,
-            'late_days_used': 0,
-            'late_days_remaining': self.course.num_late_days + 42,
-            'user': serialize_user(student),
-            'course': self.course.to_dict()
-        }, response.data)
-
-        extra = ag_models.ExtraLateDays.objects.get(user=student, course=self.course)
-        self.assertEqual(42, extra.extra_late_days)
+        self.response_data_is_expected(response.data, user=student,
+                                       course=self.course, extra_late_days=42)
+        self.do_get_late_days_test(requestor=student, requestee=student,
+                                   course=self.course, extra_late_days=42)
 
     def test_admin_change_extra_late_days_by_pk_object_exists(self):
         admin = obj_build.make_admin_user(self.course)
         student = obj_build.make_student_user(self.course)
 
         ag_models.ExtraLateDays.objects.validate_and_create(user=student, course=self.course)
-        self.do_get_late_days_test(admin, student, self.course, 0, 0)
+        self.do_get_late_days_test(admin, student, self.course)
 
         self.client.force_authenticate(admin)
         response = self.client.put(self.get_pk_url(student, self.course),
                                    {'extra_late_days': 27})
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual({
-            'late_days_used': 0,
-            'late_days_remaining': 27 + self.course.num_late_days,
-            'extra_late_days': 27,
-            'user': serialize_user(student),
-            'course': self.course.to_dict()
-        }, response.data)
-
-        extra = ag_models.ExtraLateDays.objects.get(user=student, course=self.course)
-        self.assertEqual(27, extra.extra_late_days)
+        self.response_data_is_expected(response.data, user=student,
+                                       course=self.course, extra_late_days=27)
+        self.do_get_late_days_test(admin, student, self.course, extra_late_days=27)
 
     def test_admin_change_extra_late_days_by_username_object_exists(self):
         admin = obj_build.make_admin_user(self.course)
@@ -105,16 +87,9 @@ class UserLateDaysViewTestCase(UnitTestBase):
         response = self.client.put(self.get_username_url(student, self.course),
                                    {'extra_late_days': 27})
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual({
-            'late_days_used': 0,
-            'late_days_remaining': 27 + self.course.num_late_days,
-            'extra_late_days': 27,
-            'user': serialize_user(student),
-            'course': self.course.to_dict()
-        }, response.data)
-
-        extra = ag_models.ExtraLateDays.objects.get(user=student, course=self.course)
-        self.assertEqual(27, extra.extra_late_days)
+        self.response_data_is_expected(response.data, user=student,
+                                       course=self.course, extra_late_days=27)
+        self.do_get_late_days_test(admin, student, self.course, extra_late_days=27)
 
     def test_admin_change_extra_late_days_for_other_course_permission_denied(self):
         admin = obj_build.make_admin_user(self.course)
@@ -212,11 +187,12 @@ class UserLateDaysViewTestCase(UnitTestBase):
         )
 
         self.do_get_late_days_test(
-            student,
-            student,
-            self.course,
-            1,
-            1
+            requestor=student,
+            requestee=student,
+            course=self.course,
+            late_days_used=1,
+            extra_late_days=1,
+            late_days_used_per_project={project.pk: 1}
         )
 
     def test_put_missing_body_param(self):
@@ -232,24 +208,52 @@ class UserLateDaysViewTestCase(UnitTestBase):
     def test_get_late_days_course_has_no_late_days(self):
         self.course.validate_and_update(num_late_days=0)
         student = obj_build.make_student_user(self.course)
-        self.do_get_late_days_test(student, student, self.course, 0, 0)
+        self.do_get_late_days_test(
+            requestor=student,
+            requestee=student,
+            course=self.course,
+        )
 
-    def do_get_late_days_test(self, requestor: User, requestee: User, course: ag_models.Course,
-                              expected_late_days_used: int, expected_extra_late_days: int):
+    def do_get_late_days_test(
+        self, requestor: User,
+        requestee: User,
+        course: ag_models.Course,
+        late_days_used: int = 0,
+        extra_late_days: int = 0,
+        late_days_used_per_project: dict[int, int] = {}
+    ) -> None:
         self.client.force_authenticate(requestor)
 
         for url in self.get_pk_url(requestee, course), self.get_username_url(requestee, course):
             response = self.client.get(url)
 
             self.assertEqual(status.HTTP_200_OK, response.status_code)
-            self.assertEqual({
-                'late_days_remaining': course.num_late_days + expected_extra_late_days
-                - expected_late_days_used,
-                'late_days_used': expected_late_days_used,
-                'extra_late_days': expected_extra_late_days,
-                'course': course.to_dict(),
-                'user': serialize_user(requestee)
-            }, response.data)
+            self.response_data_is_expected(
+                response_data=response.data,
+                user=requestee,
+                course=course,
+                late_days_used=late_days_used,
+                extra_late_days=extra_late_days,
+                late_days_used_per_project=late_days_used_per_project
+            )
+
+    def response_data_is_expected(self,
+                                  response_data,
+                                  user: User,
+                                  course: ag_models.Course,
+                                  late_days_used: int = 0,
+                                  extra_late_days: int = 0,
+                                  late_days_used_per_project: dict[int, int] = {}
+                                  ) -> None:
+        expected = {
+            'late_days_remaining': course.num_late_days + extra_late_days - late_days_used,
+            'late_days_used': late_days_used,
+            'extra_late_days': extra_late_days,
+            'late_days_used_per_project': late_days_used_per_project,
+            'course': course.to_dict(),
+            'user': serialize_user(user)
+        }
+        self.assertEqual(expected, response_data)
 
     def get_pk_url(self, requestee: User, course: ag_models.Course):
         url = reverse('user-late-days', kwargs={'pk': course.pk, 'username_or_pk': requestee.pk})

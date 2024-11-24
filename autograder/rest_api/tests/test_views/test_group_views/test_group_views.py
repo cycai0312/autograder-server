@@ -606,22 +606,30 @@ class MergeGroupsTestCase(AGViewTestBase):
         self.assertEqual(response.data['bonus_submissions_remaining'], fewer_bonus_submissions)
 
     def test_late_day_merging(self) -> None:
-        self.group1.late_days_used = {
-            self.group1.member_names[0]: 1
-        }
-        self.group1.save()
-        self.group2.late_days_used = {
-            self.group2.member_names[0]: 2
-        }
-        self.group2.save()
+        base_time = timezone.now()
+        # self.project.validate_and_update(allow_late_days=True, closing_time=base_time)
+        self.project.course.validate_and_update(num_late_days=2)
+        self.project.validate_and_update(closing_time=base_time, allow_late_days=True)
+
+        user1 = self.group1.members.first()
+        user2 = self.group2.members.first()
+
+        # before merge, user in group1 uses 1 late day on project
+        # and user in group2 uses 2 late days on project
+        obj_build.make_submission(group=self.group1,
+                                  timestamp=base_time + datetime.timedelta(minutes=2))
+        obj_build.make_submission(group=self.group2,
+                                  timestamp=base_time + datetime.timedelta(days=1, minutes=2))
 
         self.client.force_authenticate(self.admin)
         response = self.client.post(self.get_merge_url(self.group1, self.group2))
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-        self.assertEqual(response.data['late_days_used'], {
-            self.group1.member_names[0]: 1,
-            self.group2.member_names[0]: 2
-        })
+
+        # after merge, both users share submissions so they both have used 2 late days on project
+        user1_late_days = ag_models.LateDaysForUser.get(user1, self.course)
+        user2_late_days = ag_models.LateDaysForUser.get(user2, self.course)
+        self.assertEqual(user1_late_days.late_days_used_per_project[self.project.pk], 2)
+        self.assertEqual(user2_late_days.late_days_used_per_project[self.project.pk], 2)
 
     def test_error_merge_staff_and_non_staff(self):
         staff_group = obj_build.make_group(

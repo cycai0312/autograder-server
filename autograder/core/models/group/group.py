@@ -138,20 +138,6 @@ class Group(ag_model_base.AutograderModel):
     bonus_submissions_used = models.IntegerField(
         blank=True, default=0, validators=[MinValueValidator(0)])
 
-    late_days_used = models.JSONField(
-        default=dict, blank=True,
-        help_text=r"""Keeps track of how many late days each user in this
-            group has used.
-            Data format: {
-                "\<username\>": \<num late days used\>,
-                ...
-            }
-            NOTE: This field is updated only when a group member uses a
-            late day. If a user is moved to another group or this group
-            is merged with another one, this field will NOT be updated.
-        """
-    )
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property
@@ -239,8 +225,6 @@ class Group(ag_model_base.AutograderModel):
         'members',
 
         'bonus_submissions_remaining',
-
-        'late_days_used',
 
         'num_submissions',
         'num_submits_towards_limit',

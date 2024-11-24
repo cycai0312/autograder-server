@@ -49,7 +49,6 @@ class GroupTestCase(_SetUp):
         self.assertSequenceEqual([user.username for user in sorted_users(self.student_users)],
                                  group.member_names)
         self.assertEqual(self.project, group.project)
-        self.assertEqual({}, group.late_days_used)
 
         self.assertTrue(os.path.isdir(core_ut.get_student_group_dir(group)))
 
@@ -204,8 +203,6 @@ class GroupTestCase(_SetUp):
             'extended_due_date',
 
             'bonus_submissions_remaining',
-
-            'late_days_used',
 
             'num_submits_towards_limit',
             'num_submissions',

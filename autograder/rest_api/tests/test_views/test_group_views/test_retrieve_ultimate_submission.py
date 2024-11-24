@@ -150,11 +150,15 @@ class StaffOrStudentRetrieveStudentUltimateSubmissionTestCase(_SetUp):
         self.do_permission_denied_get_test(self.client, self.staff, self.url)
 
     def test_late_day_pending_permission_denied_for_student_not_staff(self):
-        self.project.validate_and_update(
-            closing_time=timezone.now() - datetime.timedelta(hours=12))
+        base_time = timezone.now()
 
-        self.student_group.late_days_used = {self.student.username: 1}
-        self.student_group.save()
+        # use a late day
+        self.project.validate_and_update(
+            closing_time=base_time - timezone.timedelta(minutes=2),
+            allow_late_days=True,
+        )
+        self.course.validate_and_update(num_late_days=1)
+        obj_build.make_submission(group=self.student_group, timestamp=base_time)
 
         self.do_permission_denied_get_test(self.client, self.student, self.url)
         # See autograder.rest_api.permissions.deadline_is_past for
@@ -163,12 +167,17 @@ class StaffOrStudentRetrieveStudentUltimateSubmissionTestCase(_SetUp):
                                 self.student_group_best_submission.to_dict())
 
     def test_late_day_finished_ultimate_fdbk_hidden_permission_denied(self):
-        self.project.validate_and_update(
-            closing_time=timezone.now() - datetime.timedelta(days=3),
-            hide_ultimate_submission_fdbk=True)
+        base_time = timezone.now()
 
-        self.student_group.late_days_used = {self.student.username: 1}
-        self.student_group.save()
+        self.project.validate_and_update(
+            closing_time=base_time - timezone.timedelta(minutes=2),
+            allow_late_days=True,
+            hide_ultimate_submission_fdbk=True
+        )
+
+        # use a late day
+        self.course.validate_and_update(num_late_days=1)
+        obj_build.make_submission(group=self.student_group, timestamp=base_time)
 
         self.do_permission_denied_get_test(self.client, self.student, self.url)
         self.do_permission_denied_get_test(self.client, self.staff, self.url)
